@@ -114,7 +114,6 @@ runs:
 
     - name: Process results
       run: |
-        cat ${{ runner.temp }}/plugin-check-results.txt
         RELATIVE_DIR=$(echo $PLUGIN_DIR | sed "s@$GITHUB_WORKSPACE@@g")
         node dist/index.js ${{ runner.temp }}/plugin-check-results.txt
       shell: bash
