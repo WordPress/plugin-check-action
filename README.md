@@ -33,14 +33,12 @@ jobs:
 
     - name: Run plugin check
       uses: swissspidy/wp-plugin-check-action@main
-      with:
-        build-dir: 'build'
 ```
 
 The following inputs are supported:
 
 * `build-dir` (string): path to the build directory if there is a build process involved.
-  **Note:**: file annotations will still be made against the source files.
+  **Note:** file annotations will still be made against the source files.
 * `checks` (string): only run specific checks, separated by comma.
 * `categories` (string): only run checks from specific categories, separated by comma.
 * `ignore-warnings` (bool): ignore warnings.
