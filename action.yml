@@ -1,0 +1,80 @@
+name: 'wp-plugin-check-action'
+description: 'Test your WordPress plugin with Plugin Check'
+author: 'Pascal Birchler'
+branding:
+  color: 'blue'
+  icon: 'trending-up'
+inputs:
+  repo-token:
+    description: 'The GITHUB_TOKEN secret'
+    required: false
+    default: ${{ github.token }}
+  build-dir:
+    description: 'Build directory'
+    required: false
+    default: './'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@7fdd3ece872ec7ec4c098ae5ab7637d5e0a96067
+      with:
+        php-version: 'latest'
+        coverage: none
+        tools: composer
+
+    - name: Install WP-CLI
+      run: |
+        curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        chmod +x wp-cli.phar
+        mkdir -p bin
+        mv wp-cli.phar bin/wp
+        echo "${PWD}/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: WP-CLI Info
+      run: wp cli info
+      shell: bash
+
+    - name: Checkout Plugin Check
+      uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+      with:
+        repository: 'WordPress/plugin-check'
+        path: 'plugin-check'
+
+    - name: Build Plugin Check
+      run: |
+        composer install
+      shell: bash
+      working-directory: 'plugin-check'
+
+    - name: Move Plugin Check out of plugin folder
+      run: |
+        mv plugin-check ${{ runner.temp }}/plugin-check
+      shell: bash
+
+    - name: Set PLUGIN_DIR
+      run: |
+        PLUGIN_DIR=$(realpath "$BUILD_DIR")
+        echo "PLUGIN_DIR=$PLUGIN_DIR" >> "$GITHUB_ENV"
+        
+        PLUGIN_SLUG=$(dirname $PLUGIN_DIR)
+        echo "PLUGIN_SLUG=$PLUGIN_SLUG" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        BUILD_DIR: ${{ inputs.build-dir }}
+
+    - name: Setup wp-env
+      run: |
+        echo "{ \"plugins\": [ \"$PLUGIN_DIR\", \"${{ runner.temp }}/plugin-check\" ] }" >> .wp-env.override.json
+
+        npm -g i @wordpress/env
+        wp-env start --update
+      shell: bash
+
+    - name: Run Plugin Check
+      run: |
+        wp-env run cli wp plugin list
+        wp-env run cli wp plugin check $PLUGIN_SLUG --require=./wp-content/plugins/plugin-check/cli.php
+      shell: bash

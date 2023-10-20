@@ -1,0 +1,19 @@
+name: 'test'
+on: # rebuild any PRs and main branch changes
+  pull_request:
+  push:
+    branches:
+    - main
+    - 'releases/*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Run plugin check
+      uses: ./
+      with:
+        build-dir: 'hello-dolly'
