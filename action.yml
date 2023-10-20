@@ -67,7 +67,9 @@ runs:
 
     - name: Setup wp-env
       run: |
-        echo "{ \"plugins\": [ \"$PLUGIN_DIR\", \"${{ runner.temp }}/plugin-check\" ] }" >> .wp-env.override.json
+        touch .wp-env.json
+        > .wp-env.json
+        echo "{ \"core\": null, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"${{ runner.temp }}/plugin-check\" ] }" >> .wp-env.json
 
         npm -g i @wordpress/env
         wp-env start --update
