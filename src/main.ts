@@ -32,7 +32,7 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 
 	for (const result of results) {
 		if (result.type === 'ERROR') {
-			setFailed('Errors found by plugin check.');
+			process.exitCode = 1;
 		}
 		const func = result.type === 'ERROR' ? error : warning;
 		func(result.message, {
