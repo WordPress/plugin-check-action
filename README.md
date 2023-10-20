@@ -39,16 +39,10 @@ jobs:
 
 The following inputs are supported:
 
-* `build-dir` (string): path to the built plugin files if there is a build process involved.
-  **Note:**: file annotations may be incorrect and not working in this case. This is still an open todo.
+* `build-dir` (string): path to the build directory if there is a build process involved.
+  **Note:**: file annotations will still be made against the source files.
 * `checks` (string): only run specific checks, separated by comma.
 * `categories` (string): only run checks from specific categories, separated by comma.
 * `ignore-warnings` (bool): ignore warnings.
 * `ignore-errors` (bool): ignore errors.
 * `include-experimental` (bool): include experimental checks.
-
-
-## To-do
-
-* PR comments
-* Changing the path of the file annotations when there is a build step involved

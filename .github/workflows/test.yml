@@ -10,10 +10,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Run plugin check
-      uses: ./
-      with:
-        build-dir: 'hello-dolly'
+      - name: Simulate a build step
+        run: |
+          mkdir build/
+          mv hello.php build/
+
+      - name: Run plugin check
+        uses: ./
+        with:
+          build-dir: 'build'
