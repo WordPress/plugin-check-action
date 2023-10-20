@@ -13,7 +13,22 @@ inputs:
     description: 'Build directory'
     required: false
     default: './'
-
+  categories:
+    description: 'Limit displayed results to include only specific categories'
+    required: false
+    default: ''
+  ignore-warnings:
+    description: 'Ignore warnings'
+    required: false
+    default: 'false'
+  ignore-errors:
+    description: 'Ignore errors'
+    required: false
+    default: 'false'
+  include-experimental:
+    description: 'Include experimental checks'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -59,7 +74,7 @@ runs:
         PLUGIN_DIR=$(realpath "$BUILD_DIR")
         echo "PLUGIN_DIR=$PLUGIN_DIR" >> "$GITHUB_ENV"
         
-        PLUGIN_SLUG=$(dirname $PLUGIN_DIR)
+        PLUGIN_SLUG=$(basename $PLUGIN_DIR)
         echo "PLUGIN_SLUG=$PLUGIN_SLUG" >> "$GITHUB_ENV"
       shell: bash
       env:
