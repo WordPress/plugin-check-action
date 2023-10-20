@@ -107,7 +107,7 @@ runs:
 
     - name: Process results
       run: |
-        node dist/index.js ${{ runner.temp }}/plugin-check-results.txt
+        node dist/index.js ${{ runner.temp }}/plugin-check-results.txt $PLUGIN_DIR
       shell: bash
       env:
         INPUT_REPO_TOKEN: ${{ inputs.repo-token }}

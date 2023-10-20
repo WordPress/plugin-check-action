@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 
 const file = args[0];
+const pluginDir = args[1] || '';
 
 if (!existsSync(file)) {
 	setFailed('Results file does not exist');
@@ -33,7 +34,7 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 		const func = result.type === 'ERROR' ? error : warning;
 		func(result.message, {
 			title: result.code,
-			file: fileName,
+			file: `${pluginDir}/${fileName}`,
 			startLine: result.line,
 			startColumn: result.column,
 		});

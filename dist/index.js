@@ -25886,6 +25886,7 @@ const core_1 = __nccwpck_require__(2186);
 const node_fs_1 = __nccwpck_require__(7561);
 const args = process.argv.slice(2);
 const file = args[0];
+const pluginDir = args[1] || '';
 if (!(0, node_fs_1.existsSync)(file)) {
     (0, core_1.setFailed)('Results file does not exist');
     process.exit(0);
@@ -25902,7 +25903,7 @@ for (let i = 0; i < fileContents.length - 1; i++) {
         const func = result.type === 'ERROR' ? core_1.error : core_1.warning;
         func(result.message, {
             title: result.code,
-            file: fileName,
+            file: `${pluginDir}/${fileName}`,
             startLine: result.line,
             startColumn: result.column,
         });
