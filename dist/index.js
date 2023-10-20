@@ -25901,7 +25901,7 @@ for (let i = 0; i < fileContents.length - 1; i++) {
     const results = JSON.parse(fileContents[++i]) || [];
     for (const result of results) {
         if (result.type === 'ERROR') {
-            (0, core_1.setFailed)('Errors found by plugin check.');
+            process.exitCode = 1;
         }
         const func = result.type === 'ERROR' ? core_1.error : core_1.warning;
         func(result.message, {
