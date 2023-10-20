@@ -101,9 +101,16 @@ runs:
 
     - name: Run Plugin Check
       run: |
+        ADDITIONAL_ARGS="$CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL"
         wp-env run cli wp plugin list
-        wp-env run cli wp plugin check $PLUGIN_SLUG --require=./wp-content/plugins/plugin-check/cli.php > ${{ runner.temp }}/plugin-check-results.txt
+        wp-env run cli wp plugin check $PLUGIN_SLUG --format=json $ADDITIONAL_ARGS --require=./wp-content/plugins/plugin-check/cli.php > ${{ runner.temp }}/plugin-check-results.txt
       shell: bash
+      env:
+        CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
+        CATEGORIES: ${{ inputs.categories && format('--categories={0}', inputs.categories) || '' }}
+        IGNORE_WARNINGS: ${{ inputs.ignore-warnings == 'true' && '--ignore-warnings' || '' }}
+        IGNORE_ERRORS: ${{ inputs.ignore-errors == 'true' && '--ignore-errors' || '' }}
+        INCLUDE_EXPERIMENTAL: ${{ inputs.include-experimental == 'true' && '--include-experimental' || '' }}
 
     - name: Process results
       run: |
