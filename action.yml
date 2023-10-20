@@ -107,7 +107,11 @@ runs:
 
     - name: Process results
       run: |
-        node dist/index.js ${{ runner.temp }}/plugin-check-results.txt $PLUGIN_DIR
+        cat ${{ runner.temp }}/plugin-check-results.txt
+        echo $PLUGIN_DIR
+        RELATIVE_DIR=$(echo $PLUGIN_DIR | sed s/"$GITHUB_WORKSPACE"//
+        echo $RELATIVE_DIR
+        node dist/index.js ${{ runner.temp }}/plugin-check-results.txt $RELATIVE_DIR
       shell: bash
       env:
         INPUT_REPO_TOKEN: ${{ inputs.repo-token }}
