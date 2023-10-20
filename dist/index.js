@@ -25886,12 +25886,12 @@ const core_1 = __nccwpck_require__(2186);
 const node_fs_1 = __nccwpck_require__(7561);
 const args = process.argv.slice(2);
 const file = args[0];
-const pluginDir = args[1] || '';
 if (!(0, node_fs_1.existsSync)(file)) {
-    (0, core_1.setFailed)('Results file does not exist');
-    process.exit(0);
+    (0, core_1.setFailed)('Results file does not exist.');
 }
-const fileContents = (0, node_fs_1.readFileSync)(file, { encoding: 'utf8' }).split('\n');
+const fileContents = (0, node_fs_1.existsSync)(file)
+    ? (0, node_fs_1.readFileSync)(file, { encoding: 'utf8' }).split('\n')
+    : [];
 for (let i = 0; i < fileContents.length - 1; i++) {
     const line = fileContents[i];
     if (!line.startsWith('FILE: ')) {
@@ -25900,10 +25900,13 @@ for (let i = 0; i < fileContents.length - 1; i++) {
     const fileName = line.split('FILE: ')[1];
     const results = JSON.parse(fileContents[++i]) || [];
     for (const result of results) {
+        if (result.type === 'ERROR') {
+            (0, core_1.setFailed)('Errors found by plugin check.');
+        }
         const func = result.type === 'ERROR' ? core_1.error : core_1.warning;
         func(result.message, {
             title: result.code,
-            file: `${pluginDir}/${fileName}`,
+            file: fileName,
             startLine: result.line,
             startColumn: result.column,
         });

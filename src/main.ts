@@ -4,14 +4,14 @@ import { existsSync, readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 
 const file = args[0];
-const pluginDir = args[1] || '';
 
 if (!existsSync(file)) {
-	setFailed('Results file does not exist');
-	process.exit(0);
+	setFailed('Results file does not exist.');
 }
 
-const fileContents = readFileSync(file, { encoding: 'utf8' }).split('\n');
+const fileContents = existsSync(file)
+	? readFileSync(file, { encoding: 'utf8' }).split('\n')
+	: [];
 
 type Result = {
 	line: number;
@@ -31,10 +31,13 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 	const results: Result[] = JSON.parse(fileContents[++i]) || [];
 
 	for (const result of results) {
+		if (result.type === 'ERROR') {
+			setFailed('Errors found by plugin check.');
+		}
 		const func = result.type === 'ERROR' ? error : warning;
 		func(result.message, {
 			title: result.code,
-			file: `${pluginDir}/${fileName}`,
+			file: fileName,
 			startLine: result.line,
 			startColumn: result.column,
 		});

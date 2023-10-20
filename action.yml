@@ -121,7 +121,7 @@ runs:
         echo $PLUGIN_DIR
         ls -l $PLUGIN_DIR
         echo $RELATIVE_DIR
-        node dist/index.js ${{ runner.temp }}/plugin-check-results.txt $RELATIVE_DIR
+        node dist/index.js ${{ runner.temp }}/plugin-check-results.txt
       shell: bash
       env:
         INPUT_REPO_TOKEN: ${{ inputs.repo-token }}
