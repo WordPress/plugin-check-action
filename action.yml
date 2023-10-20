@@ -116,6 +116,11 @@ runs:
       run: |
         cat ${{ runner.temp }}/plugin-check-results.txt
         RELATIVE_DIR=$(echo $PLUGIN_DIR | sed "s@$GITHUB_WORKSPACE@@g")
+        echo $GITHUB_WORKSPACE
+        ls -l $GITHUB_WORKSPACE
+        echo $PLUGIN_DIR
+        ls -l $PLUGIN_DIR
+        echo $RELATIVE_DIR
         node dist/index.js ${{ runner.temp }}/plugin-check-results.txt $RELATIVE_DIR
       shell: bash
       env:
