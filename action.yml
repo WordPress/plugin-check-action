@@ -1,4 +1,4 @@
-name: 'wp-plugin-check-action'
+name: 'WP Plugin Check'
 description: 'Test your WordPress plugin with Plugin Check'
 author: 'Pascal Birchler'
 branding:
