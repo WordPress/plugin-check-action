@@ -43,6 +43,8 @@ The following inputs are supported:
   **Note:** file annotations will still be made against the source files.
 * `checks` (string): only run specific checks, separated by comma or newline.
 * `categories` (string): only run checks from specific categories, separated by comma or newline.
+* `exclude-directories` (string): additional directories to exclude from checks, separated by comma or newline. 
+  By default, `.git`, `vendor` and `node_modules` directories are excluded.
 * `ignore-warnings` (bool): ignore warnings.
 * `ignore-errors` (bool): ignore errors.
 * `include-experimental` (bool): include experimental checks.
