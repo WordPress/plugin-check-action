@@ -10,6 +10,10 @@ Results are posted as file annotations.
 
 ## Usage
 
+### Basic Example
+
+The simplest way to get up and running with your plugin.
+
 Add a workflow (`.github/workflows/build-test.yml`):
 
 ```yaml
@@ -28,11 +32,48 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Run plugin check
+      uses: swissspidy/wp-plugin-check-action@v1
+```
+
+### Advanced Usage
+
+The basic example above covers many use cases, but sometimes plugins can be a bit more
+complex and involve some sort of build process.
+Also, if you already use tools like PHPCS, you might want to use the PHPCS-based checks
+from Plugin Check but focus on the ones that are more useful for you.
+
+```yaml
+name: 'build-test'
+on: # rebuild any PRs and main branch changes
+  pull_request:
+  push:
+    branches:
+    - main
+    - 'releases/*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
 # Here's where you would run your custom build process
-# and configure & start the server environment.
+# ...
+# ...
+
+    - name: Build plugin
+      run: npm run build
 
     - name: Run plugin check
-      uses: swissspidy/wp-plugin-check-action@main
+      uses: swissspidy/wp-plugin-check-action@v1
+      with:
+        build-dir: './my-awesome-plugin'
+        exclude-directories: 'prefixed_vendor_dir,another_dir_to_ignore'
+        categories: |
+          performance
+          accessibility
 ```
 
 ### Inputs
