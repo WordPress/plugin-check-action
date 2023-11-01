@@ -20,9 +20,6 @@ jobs:
 
       - name: Run plugin check
         uses: ./
+        continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
           build-dir: 'build'
-
-      - name: Ensure green check
-        if: ${{ always() }}
-        run: exit 0
