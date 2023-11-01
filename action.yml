@@ -122,7 +122,7 @@ runs:
 
     - name: Process results
       run: |
-        node ${{ github.action_path }}/dist/index.js ${{ runner.temp }}/plugin-check-results.txt || exit 0
+        node ${{ github.action_path }}/dist/index.js ${{ runner.temp }}/plugin-check-results.txt
       shell: bash
       env:
         INPUT_REPO_TOKEN: ${{ inputs.repo-token }}
