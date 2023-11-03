@@ -10,7 +10,64 @@ Results are posted as file annotations.
 
 ## Usage
 
-### Basic Example
+See [action.yml](action.yml)
+
+```yaml
+- uses: swissspidy/wp-plugin-check-action@v1
+  with:
+    # Personal access token (PAT) used to comment on pull requests.
+    # Not currently used.
+    #
+    # [Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)
+    #
+    # Default: ${{ github.token }}
+    repo-token: ''
+
+    # Build directory of your plugin.
+    # Defaults to current directory / repository root.
+    #
+    # Default: './'
+    build-dir: ''
+
+    # List of checks to run.
+    # Each check should be separated with new lines.
+    # Examples: i18n_usage, file_type, late_escaping.
+    # By default, all checks are run.
+    #
+    # Default: ''
+    checks: ''
+
+    # List of categories to limit checks to.
+    # Each category should be separated with new lines.
+    # Examples: general, security
+    # By default, checks in all categories are run.
+    #
+    # Default: ''
+    categories: ''
+
+    # List of directories to exclude from checks.
+    # Each category should be separated with new lines.
+    #
+    # Default: ''
+    exclude-directories: ''
+    
+    # Whether to ignore warnings reported by Plugin Check.
+    #
+    # Default: false
+    ignore-warnings: ''
+
+    # Whether to ignore errors reported by Plugin Check.
+    #
+    # Default: false
+    ignore-errors: ''
+
+    # Whether to include experimental checks.
+    #
+    # Default: true
+    include-experimental: ''
+```
+
+### Basic
 
 The simplest way to get up and running with your plugin.
 
@@ -44,53 +101,28 @@ Also, if you already use tools like PHPCS, you might want to use the PHPCS-based
 from Plugin Check but focus on the ones that are more useful for you.
 
 ```yaml
-name: 'build-test'
-on: # rebuild any PRs and main branch changes
-  pull_request:
-  push:
-    branches:
-    - main
-    - 'releases/*'
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+steps:
+- name: Checkout
+  uses: actions/checkout@v3
 
 # Here's where you would run your custom build process
 # ...
 # ...
 
-    - name: Build plugin
-      run: npm run build
+- name: Build plugin
+  run: npm run build
 
-    - name: Run plugin check
-      uses: swissspidy/wp-plugin-check-action@v1
-      with:
-        build-dir: './my-awesome-plugin'
-        exclude-directories: 'prefixed_vendor_dir,another_dir_to_ignore'
-        categories: |
-          performance
-          accessibility
+- name: Run plugin check
+  uses: swissspidy/wp-plugin-check-action@v1
+  with:
+    build-dir: './my-awesome-plugin'
+    exclude-directories: 'prefixed_vendor_dir,another_dir_to_ignore'
+    categories: |
+      performance
+      accessibility
 ```
 
-### Inputs
-
-The following inputs are supported:
-
-* `build-dir` (string): path to the build directory if there is a build process involved.
-  **Note:** file annotations will still be made against the source files.
-* `checks` (string): only run specific checks, separated by comma or newline.
-* `categories` (string): only run checks from specific categories, separated by comma or newline.
-* `exclude-directories` (string): additional directories to exclude from checks, separated by comma or newline. 
-  By default, `.git`, `vendor` and `node_modules` directories are excluded.
-* `ignore-warnings` (bool): ignore warnings.
-* `ignore-errors` (bool): ignore errors.
-* `include-experimental` (bool): include experimental checks.
-
-#### Supported Checks
+### Supported Checks
 
 At the moment, the following checks exist:
 
@@ -110,7 +142,7 @@ At the moment, the following checks exist:
 * `no_unfiltered_uploads`
 * `trademarks`
 
-#### Supported Categories
+### Supported Categories
 
 At the moment, the following categories exist:
 
