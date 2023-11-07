@@ -110,9 +110,10 @@ runs:
     - name: Run Plugin Check
       run: |
         CHECKS="${CHECKS//$'\n'/,}"
+        EXCLUDE_CHECKS="${EXCLUDE_CHECKS//$'\n'/,}"
         CATEGORIES="${CATEGORIES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
-        ADDITIONAL_ARGS="$CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_DIRS"
+        ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_DIRS"
         wp-env run cli wp plugin list
         wp-env run cli wp plugin check $PLUGIN_SLUG --format=json $ADDITIONAL_ARGS --require=./wp-content/plugins/plugin-check/cli.php > ${{ runner.temp }}/plugin-check-results.txt
       shell: bash
