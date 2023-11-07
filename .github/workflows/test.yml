@@ -23,3 +23,13 @@ jobs:
         continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
           build-dir: 'build'
+
+      - name: Run plugin check
+        uses: ./
+        continue-on-error: true # Since we expect it to always fail for the test plugin.
+        with:
+          build-dir: 'build'
+          exclude-checks: |
+            late_escaping
+            plugin_readme
+          include-experimental: true
