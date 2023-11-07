@@ -17,6 +17,10 @@ inputs:
     description: 'Only run specific checks'
     required: false
     default: ''
+  exclude-checks:
+    description: 'Checks to exclude'
+    required: false
+    default: ''
   categories:
     description: 'Limit checks to specific categories'
     required: false
@@ -114,6 +118,7 @@ runs:
       shell: bash
       env:
         CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
+        EXCLUDE_CHECKS: ${{ inputs.exclude-checks && format('--exclude-checks={0}', inputs.exclude-checks) || '' }}
         CATEGORIES: ${{ inputs.categories && format('--categories={0}', inputs.categories) || '' }}
         EXCLUDE_DIRS: ${{ inputs.exclude-directories && format('--exclude-directories={0}', inputs.exclude-directories) || '' }}
         IGNORE_WARNINGS: ${{ inputs.ignore-warnings == 'true' && '--ignore-warnings' || '' }}

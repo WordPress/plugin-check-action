@@ -37,6 +37,14 @@ See [action.yml](action.yml)
     # Default: ''
     checks: ''
 
+    # List of checks to exclude from running.
+    # Each check should be separated with new lines.
+    # Examples: i18n_usage, file_type, late_escaping.
+    # Applies after the `checks` input.
+    #
+    # Default: ''
+    exclude-checks: ''
+
     # List of categories to limit checks to.
     # Each category should be separated with new lines.
     # Examples: general, security
