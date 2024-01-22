@@ -142,6 +142,7 @@ At the moment, the following checks exist:
 * `late_escaping`
 * `plugin_updater`
 * `plugin_review_phpcs`
+* `direct_db_queries`
 * `performant_wp_query_params`
 * `enqueued_scripts_in_footer`
 * `plugin_readme`
