@@ -47,7 +47,7 @@ runs:
     - name: Set up Node
       uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8
       with:
-        node-version: '16'
+        node-version: '20'
 
     - name: Setup PHP
       uses: shivammathur/setup-php@6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d
