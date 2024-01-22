@@ -132,31 +132,31 @@ steps:
 
 ### Supported Checks
 
-At the moment, the following checks exist:
+At the time of writing, the following checks exist:
 
 * `i18n_usage`
-* `enqueued_scripts_size`
 * `code_obfuscation`
-* `file_type`
-* `plugin_header_text_domain`
-* `late_escaping`
-* `plugin_updater`
-* `plugin_review_phpcs`
 * `direct_db_queries`
-* `performant_wp_query_params`
 * `enqueued_scripts_in_footer`
-* `plugin_readme`
+* `enqueued_scripts_size`
 * `enqueued_styles_scope`
+* `file_type`
+* `late_escaping`
 * `localhost`
 * `no_unfiltered_uploads`
+* `performant_wp_query_params`
+* `plugin_header_text_domain`
+* `plugin_readme`
+* `plugin_review_phpcs`
+* `plugin_updater`
 * `trademarks`
 
 ### Supported Categories
 
-At the moment, the following categories exist:
+At the time of writing, the following categories exist:
 
+* `accessibility`
 * `general`
+* `performance`
 * `plugin_repo`
 * `security`
-* `performance`
-* `accessibility`
