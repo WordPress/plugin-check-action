@@ -41,6 +41,10 @@ inputs:
     description: 'Include experimental checks'
     required: false
     default: 'false'
+  wp-version:
+    description: 'WordPress version to use'
+    required: false
+    default: 'latest'
 runs:
   using: "composite"
   steps:
@@ -84,11 +88,13 @@ runs:
       run: |
         touch .wp-env.json
         > .wp-env.json
-        echo "{ \"core\": null, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"plugin-check\" ] }" >> .wp-env.json
+        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"https://downloads.wordpress.org/plugin/plugin-check.1.0.0.zip\" ] }" >> .wp-env.json
 
-        npm -g i @wordpress/env
+        npm -g --no-fund i @wordpress/env
         wp-env start --update
       shell: bash
+      env:
+        WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
 
     - name: Run Plugin Check
       run: |

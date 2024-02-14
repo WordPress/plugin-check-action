@@ -73,6 +73,11 @@ See [action.yml](action.yml)
     #
     # Default: true
     include-experimental: ''
+
+    # WordPress version to use. Supports "latest" or "trunk".
+    #
+    # Default: latest
+    wp-version: ''
 ```
 
 ### Basic
