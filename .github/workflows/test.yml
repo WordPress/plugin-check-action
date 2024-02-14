@@ -18,13 +18,13 @@ jobs:
           mkdir build/
           mv hello.php build/
 
-      - name: Run plugin check
+      - name: Run plugin check (default)
         uses: ./
         continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
           build-dir: 'build'
 
-      - name: Run plugin check
+      - name: Run plugin check (exclude checks)
         uses: ./
         continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
@@ -33,3 +33,10 @@ jobs:
             late_escaping
             plugin_readme
           include-experimental: true
+
+      - name: Run plugin check (trunk)
+        uses: ./
+        continue-on-error: true # Since we expect it to always fail for the test plugin.
+        with:
+          build-dir: 'build'
+          wp-version: 'trunk'
