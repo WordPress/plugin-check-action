@@ -69,23 +69,6 @@ runs:
       run: wp cli info
       shell: bash
 
-    - name: Checkout Plugin Check
-      uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
-      with:
-        repository: 'WordPress/plugin-check'
-        path: 'plugin-check'
-
-    - name: Build Plugin Check
-      run: |
-        composer install
-      shell: bash
-      working-directory: 'plugin-check'
-
-    - name: Move Plugin Check out of plugin folder
-      run: |
-        mv plugin-check ${{ runner.temp }}/plugin-check
-      shell: bash
-
     - name: Set PLUGIN_DIR
       run: |
         PLUGIN_DIR=$(realpath "$BUILD_DIR")
@@ -101,7 +84,7 @@ runs:
       run: |
         touch .wp-env.json
         > .wp-env.json
-        echo "{ \"core\": null, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"${{ runner.temp }}/plugin-check\" ] }" >> .wp-env.json
+        echo "{ \"core\": null, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"plugin-check\" ] }" >> .wp-env.json
 
         npm -g i @wordpress/env
         wp-env start --update
