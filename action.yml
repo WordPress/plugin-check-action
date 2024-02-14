@@ -91,7 +91,7 @@ runs:
         echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"https://downloads.wordpress.org/plugin/plugin-check.1.0.0.zip\" ] }" >> .wp-env.json
 
         npm -g --no-fund i @wordpress/env
-        wp-env start
+        wp-env start --update
       shell: bash
       env:
         WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
