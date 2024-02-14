@@ -94,7 +94,7 @@ runs:
         wp-env start --update
       shell: bash
       env:
-        WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || null }}
+        WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
 
     - name: Run Plugin Check
       run: |
