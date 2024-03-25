@@ -54,7 +54,7 @@ runs:
         node-version: '20'
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@a4e22b60bbb9c1021113f2860347b0759f66fe5d
+      uses: shivammathur/setup-php@73963f5001e335723c998e4a0125ce060083985c
       with:
         php-version: 'latest'
         coverage: none
