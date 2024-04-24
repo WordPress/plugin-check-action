@@ -6,14 +6,14 @@ Results are posted as file annotations.
 
 ## Example
 
-<img width="887" alt="Plugin Check error messages output on GitHub Actions" src="https://github.com/swissspidy/wp-plugin-check-action/assets/841956/31292472-51d5-487d-9878-1940a20e1e0b">
+<img width="887" alt="Plugin Check error messages output on GitHub Actions" src="https://github.com/wordpress/plugin-check-action/assets/841956/31292472-51d5-487d-9878-1940a20e1e0b">
 
 ## Usage
 
 See [action.yml](action.yml)
 
 ```yaml
-- uses: swissspidy/wp-plugin-check-action@v1
+- uses: wordpress/plugin-check-action@v1
   with:
     # Personal access token (PAT) used to comment on pull requests.
     # Not currently used.
@@ -103,7 +103,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Run plugin check
-      uses: swissspidy/wp-plugin-check-action@v1
+      uses: wordpress/plugin-check-action@v1
 ```
 
 ### Advanced Usage
@@ -126,7 +126,7 @@ steps:
   run: npm run build
 
 - name: Run plugin check
-  uses: swissspidy/wp-plugin-check-action@v1
+  uses: wordpress/plugin-check-action@v1
   with:
     build-dir: './my-awesome-plugin'
     exclude-directories: 'prefixed_vendor_dir,another_dir_to_ignore'

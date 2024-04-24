@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/swissspidy/wp-plugin-check-action.git"
+    "url": "git+https://github.com/wordpress/plugin-check-action.git"
   },
   "keywords": [
     "actions",
