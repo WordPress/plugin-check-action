@@ -1,4 +1,4 @@
-# wp-plugin-check-action
+# WordPress Plugin Check Action
 
 A GitHub action to run [Plugin Check](https://wordpress.org/plugins/plugin-check/) against your plugin.
 
