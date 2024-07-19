@@ -83,6 +83,9 @@ runs:
         CATEGORIES="${CATEGORIES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_DIRS"
+        
+        # Updating to WP-CLI nightly until 2.11.0 is released so we can do `wp plugin get foo --field=requires_plugins`.
+        wp-env run cli wp cli update --nightly --yes
 
         # List all dependencies
         wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
