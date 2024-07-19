@@ -53,27 +53,6 @@ runs:
       with:
         node-version: '20'
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@c541c155eee45413f5b09a52248675b1a2575231
-      with:
-        php-version: 'latest'
-        coverage: none
-        tools: composer
-
-# Installing the nightly until 2.11.0 is released so we can do `wp plugin get foo --field=requires_plugins`.
-    - name: Install WP-CLI
-      run: |
-        curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli-nightly.phar
-        chmod +x wp-cli.phar
-        mkdir -p bin
-        mv wp-cli.phar bin/wp
-        echo "${PWD}/bin" >> $GITHUB_PATH
-      shell: bash
-
-    - name: WP-CLI Info
-      run: wp cli info
-      shell: bash
-
     - name: Set PLUGIN_DIR
       run: |
         PLUGIN_DIR=$(realpath "$BUILD_DIR")
@@ -104,7 +83,7 @@ runs:
         CATEGORIES="${CATEGORIES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_DIRS"
-        
+
         # List all dependencies
         wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
         DEPENDENCIES=$(wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins | tr ',' ' ')
