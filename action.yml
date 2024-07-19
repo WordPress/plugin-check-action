@@ -60,9 +60,10 @@ runs:
         coverage: none
         tools: composer
 
+# Installing the nightly until 2.11.0 is released so we can do `wp plugin get foo --field=requires_plugins`.
     - name: Install WP-CLI
       run: |
-        curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli-nightly.phar
         chmod +x wp-cli.phar
         mkdir -p bin
         mv wp-cli.phar bin/wp
