@@ -105,7 +105,18 @@ runs:
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_DIRS"
         
-        # TODO: Install dependencies first, see https://github.com/wordpress/plugin-check-action/issues/66
+        # List all dependencies
+        wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
+        DEPENDENCIES=$(wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins | tr ',' ' ')
+
+        if [ -z "$DEPENDENCIES" ];
+          echo "Plugin has no dependencies"
+        else
+          echo "Installing plugin dependencies: $DEPENDENCIES"
+          # Install all dependencies first.
+          wp-env run cli wp plugin install --activate $DEPENDENCIES
+        fi;
+
         wp-env run cli wp plugin activate $PLUGIN_SLUG
 
         # Debugging information
