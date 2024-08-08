@@ -72,6 +72,8 @@ runs:
 
         npm -g --no-fund i @wordpress/env
         wp-env start --update
+        
+        wp-env run cli wp cli info
       shell: bash
       env:
         WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
