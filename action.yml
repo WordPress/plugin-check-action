@@ -90,7 +90,7 @@ runs:
         wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
         DEPENDENCIES=$(wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins | tr ',' ' ')
 
-        if [ -z "$DEPENDENCIES" ];
+        if [ -z "$DEPENDENCIES" ]; then
           echo "Plugin has no dependencies"
         else
           echo "Installing plugin dependencies: $DEPENDENCIES"
