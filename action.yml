@@ -53,26 +53,6 @@ runs:
       with:
         node-version: '20'
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@c541c155eee45413f5b09a52248675b1a2575231
-      with:
-        php-version: 'latest'
-        coverage: none
-        tools: composer
-
-    - name: Install WP-CLI
-      run: |
-        curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-        chmod +x wp-cli.phar
-        mkdir -p bin
-        mv wp-cli.phar bin/wp
-        echo "${PWD}/bin" >> $GITHUB_PATH
-      shell: bash
-
-    - name: WP-CLI Info
-      run: wp cli info
-      shell: bash
-
     - name: Set PLUGIN_DIR
       run: |
         PLUGIN_DIR=$(realpath "$BUILD_DIR")
@@ -88,10 +68,12 @@ runs:
       run: |
         touch .wp-env.json
         > .wp-env.json
-        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"$PLUGIN_DIR\", \"https://downloads.wordpress.org/plugin/plugin-check.latest-stable.zip\" ] }" >> .wp-env.json
+        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"https://downloads.wordpress.org/plugin/plugin-check.latest-stable.zip\" ], \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
 
         npm -g --no-fund i @wordpress/env
         wp-env start --update
+        
+        wp-env run cli wp cli info
       shell: bash
       env:
         WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
@@ -104,7 +86,18 @@ runs:
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_DIRS"
         
-        # TODO: Install dependencies first, see https://github.com/wordpress/plugin-check-action/issues/66
+        # List all dependencies
+        wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
+        DEPENDENCIES=$(wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins | tr ',' ' ')
+        
+        if [ -z "$DEPENDENCIES" ]; then
+          echo "Plugin has no dependencies"
+        else
+          echo "Installing plugin dependencies: $DEPENDENCIES"
+          # Install all dependencies first.
+          wp-env run cli wp plugin install --activate $DEPENDENCIES
+        fi;
+
         wp-env run cli wp plugin activate $PLUGIN_SLUG
 
         # Debugging information
