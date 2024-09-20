@@ -53,8 +53,14 @@ See [action.yml](action.yml)
     # Default: ''
     categories: ''
 
+    # List of files (file paths) to exclude from checks.
+    # Each file should be separated with new lines.
+    #
+    # Default: ''
+    exclude-files: ''
+    
     # List of directories to exclude from checks.
-    # Each category should be separated with new lines.
+    # Each directory should be separated with new lines.
     #
     # Default: ''
     exclude-directories: ''
