@@ -25,6 +25,10 @@ inputs:
     description: 'Limit checks to specific categories'
     required: false
     default: ''
+  exclude-files:
+    description: 'Exclude certain files from checks'
+    required: false
+    default: ''
   exclude-directories:
     description: 'Exclude certain directories from checks'
     required: false
@@ -112,6 +116,7 @@ runs:
         CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
         EXCLUDE_CHECKS: ${{ inputs.exclude-checks && format('--exclude-checks={0}', inputs.exclude-checks) || '' }}
         CATEGORIES: ${{ inputs.categories && format('--categories={0}', inputs.categories) || '' }}
+        EXCLUDE_FILES: ${{ inputs.exclude-files && format('--exclude-files={0}', inputs.exclude-files) || '' }}
         EXCLUDE_DIRS: ${{ inputs.exclude-directories && format('--exclude-directories={0}', inputs.exclude-directories) || '' }}
         IGNORE_WARNINGS: ${{ inputs.ignore-warnings == 'true' && '--ignore-warnings' || '' }}
         IGNORE_ERRORS: ${{ inputs.ignore-errors == 'true' && '--ignore-errors' || '' }}
