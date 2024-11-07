@@ -116,7 +116,7 @@ jobs:
 
 The basic example above covers many use cases, but sometimes plugins can be a bit more
 complex and involve some sort of build process.
-Also, if you already use tools like PHPCS, you might want to use the PHPCS-based checks
+Also, if you already use tools like PHPCS, you might want to skip the PHPCS-based checks
 from Plugin Check but focus on the ones that are more useful for you.
 
 ```yaml
@@ -139,6 +139,40 @@ steps:
     categories: |
       performance
       accessibility
+```
+
+A common build step involves the [`wp dist-archive`](https://github.com/wp-cli/dist-archive-command/) command.
+In combination with Plugin Check it could be used like this:
+
+```yaml
+steps:
+  - name: Checkout
+    uses: actions/checkout@v3
+
+  # Here's where you would run your custom build process
+  # ...
+  # ...
+
+  - name: Setup PHP
+    uses: shivammathur/setup-php@v2
+    with:
+        php-version: latest
+        coverage: none
+        tools: wp-cli
+
+  - name: Install latest version of dist-archive-command
+    run: wp package install wp-cli/dist-archive-command:@stable
+
+  - name: Build plugin
+    run: |
+      wp dist-archive . ./my-awesome-plugin.zip
+      mkdir tmp-build
+      unzip my-awesome-plugin.zip -d tmp-build
+
+  - name: Run plugin check
+    uses: wordpress/plugin-check-action@v1.0.6
+    with:
+      build-dir: './tmp-build/my-awesome-plugin'
 ```
 
 ### Supported Checks
