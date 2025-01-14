@@ -41,3 +41,11 @@ jobs:
         continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
           build-dir: 'tests/fixtures/plugin-with-dependencies'
+
+      - name: Run plugin check (strict)
+        uses: ./
+        continue-on-error: true # Since we expect it to always fail for the test plugin.
+        with:
+          build-dir: 'tests/fixtures/plugin-with-dependencies'
+          ignore-errors: true
+          strict: true

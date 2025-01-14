@@ -30,11 +30,18 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 	const fileName = line.split('FILE: ')[1];
 	const results: Result[] = JSON.parse(fileContents[++i]) || [];
 
+	if (results.length > 0 && process.env.STRICT === 'true') {
+		process.exitCode = 1;
+	}
+
 	for (const result of results) {
 		if (result.type === 'ERROR') {
 			process.exitCode = 1;
 		}
-		const func = result.type === 'ERROR' ? error : warning;
+		const func =
+			result.type === 'ERROR' || process.env.STRICT === 'true'
+				? error
+				: warning;
 		func(result.message, {
 			title: result.code,
 			file: fileName,

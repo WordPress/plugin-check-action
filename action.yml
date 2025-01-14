@@ -49,6 +49,34 @@ inputs:
     description: 'WordPress version to use'
     required: false
     default: 'latest'
+  severity:
+    description: 'Severity level'
+    required: false
+    default: ''
+  error-severity:
+    description: 'Error severity level'
+    required: false
+    default: ''
+  warning-severity:
+    description: 'Warning severity level'
+    required: false
+    default: ''
+  include-low-severity-errors:
+    description: 'Include errors with lower severity than the threshold as other type.'
+    required: false
+    default: ''
+  include-low-severity-warnings:
+    description: 'Include warnings with lower severity than the threshold as other type.'
+    required: false
+    default: ''
+  slug:
+    description: 'Slug to override the default'
+    required: false
+    default: ''
+  strict:
+    description: 'Treat everything as an error'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -76,8 +104,6 @@ runs:
 
         npm -g --no-fund i @wordpress/env
         wp-env start --update
-        
-        wp-env run cli wp cli info
       shell: bash
       env:
         WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
@@ -89,12 +115,16 @@ runs:
         CATEGORIES="${CATEGORIES//$'\n'/,}"
         EXCLUDE_FILES="${EXCLUDE_FILES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
-        ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS"
+        ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
 
-        # Debugging information
+        echo "::group::Debugging information"
+        wp-env run cli wp cli info
         wp-env run cli wp plugin list
         wp-env run cli wp plugin list-checks
         wp-env run cli wp plugin list-check-categories
+        echo "::endgroup::"
+
+        echo "::group::Install dependencies"
 
         # List all dependencies
         wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
@@ -107,6 +137,8 @@ runs:
           # Install all dependencies first.
           wp-env run cli wp plugin install --activate $DEPENDENCIES
         fi;
+        
+        echo "::endgroup::"
 
         wp-env run cli wp plugin activate $PLUGIN_SLUG
 
@@ -122,6 +154,12 @@ runs:
         IGNORE_WARNINGS: ${{ inputs.ignore-warnings == 'true' && '--ignore-warnings' || '' }}
         IGNORE_ERRORS: ${{ inputs.ignore-errors == 'true' && '--ignore-errors' || '' }}
         INCLUDE_EXPERIMENTAL: ${{ inputs.include-experimental == 'true' && '--include-experimental' || '' }}
+        SEVERITY: ${{ inputs.severity && format('--severity={0}', inputs.severity) || '' }}
+        ERROR_SEVERITY: ${{ inputs.error-severity && format('--error-severity={0}', inputs.error-severity) || '' }}
+        WARNING_SEVERITY: ${{ inputs.warning-severity && format('--warning-severity={0}', inputs.warning-severity) || '' }}
+        INCLUDE_LOW_SEVERITY_ERRORS: ${{ inputs.include-low-severity-errors == 'true' && '--include-low-severity-errors' || '' }}
+        INCLUDE_LOW_SEVERITY_WARNINGS: ${{ inputs.include-low-severity-warnings == 'true' && '--include-low-severity-warnings' || '' }}
+        SLUG: ${{ inputs.slug && format('--slug={0}', inputs.slug) || '' }}
 
     - name: Process results
       run: |
@@ -129,3 +167,4 @@ runs:
       shell: bash
       env:
         INPUT_REPO_TOKEN: ${{ inputs.repo-token }}
+        STRICT: ${{ inputs.strict }}
