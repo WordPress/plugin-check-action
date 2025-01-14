@@ -84,6 +84,41 @@ See [action.yml](action.yml)
     #
     # Default: latest
     wp-version: ''
+
+    # Severity level.
+    #
+    # Default: ''
+    severity: ''
+
+    # Error severity level.
+    #
+    # Default: ''
+    error-severity:
+
+    # Warning severity level.
+    #
+    # Default: ''
+    warning-severity:
+
+    # Include errors with lower severity than the threshold as other type.
+    #
+    # Default: ''
+    include-low-severity-errors: ''
+
+    # Include warnings with lower severity than the threshold as other type.
+    #
+    # Default: ''
+    include-low-severity-warnings: ''
+
+    # Slug to override the default.
+    #
+    # Default: ''
+    slug:
+
+    # Treat everything as an error.
+    #
+    # Default: false
+    strict: ''
 ```
 
 ### Basic
