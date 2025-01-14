@@ -38,7 +38,10 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 		if (result.type === 'ERROR') {
 			process.exitCode = 1;
 		}
-		const func = result.type === 'ERROR' || process.env.STRICT === 'true' ? error : warning;
+		const func =
+			result.type === 'ERROR' || process.env.STRICT === 'true'
+				? error
+				: warning;
 		func(result.message, {
 			title: result.code,
 			file: fileName,
