@@ -141,9 +141,16 @@ runs:
         echo "::endgroup::"
 
         wp-env run cli wp plugin activate $PLUGIN_SLUG
+        
+        echo "::group::Run Plugin Check"
 
         # Run Plugin Check
         wp-env run cli wp plugin check $PLUGIN_SLUG --format=json $ADDITIONAL_ARGS --require=./wp-content/plugins/plugin-check/cli.php > ${{ runner.temp }}/plugin-check-results.txt
+        
+        cat ${{ runner.temp }}/plugin-check-results.txt
+
+        echo "::endgroup::"
+
       shell: bash
       env:
         CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
