@@ -33,6 +33,10 @@ inputs:
     description: 'Exclude certain directories from checks'
     required: false
     default: ''
+  ignore-codes:
+    description: 'Error codes to ignore'
+    required: false
+    default: ''
   ignore-warnings:
     description: 'Ignore warnings'
     required: false
@@ -115,7 +119,8 @@ runs:
         CATEGORIES="${CATEGORIES//$'\n'/,}"
         EXCLUDE_FILES="${EXCLUDE_FILES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
-        ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
+        IGNORE_CODES="${IGNORE_CODES//$'\n'/,}"
+        ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_CODES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
 
         echo "::group::Debugging information"
         wp-env run cli wp cli info
@@ -151,6 +156,7 @@ runs:
         CATEGORIES: ${{ inputs.categories && format('--categories={0}', inputs.categories) || '' }}
         EXCLUDE_FILES: ${{ inputs.exclude-files && format('--exclude-files={0}', inputs.exclude-files) || '' }}
         EXCLUDE_DIRS: ${{ inputs.exclude-directories && format('--exclude-directories={0}', inputs.exclude-directories) || '' }}
+        IGNORE_CODES: ${{ inputs.ignore-codes && format('--ignore-codes={0}', inputs.ignore-codes) || '' }}
         IGNORE_WARNINGS: ${{ inputs.ignore-warnings == 'true' && '--ignore-warnings' || '' }}
         IGNORE_ERRORS: ${{ inputs.ignore-errors == 'true' && '--ignore-errors' || '' }}
         INCLUDE_EXPERIMENTAL: ${{ inputs.include-experimental == 'true' && '--include-experimental' || '' }}
