@@ -107,10 +107,17 @@ runs:
         echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"https://downloads.wordpress.org/plugin/plugin-check.latest-stable.zip\" ], \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
 
         npm -g --no-fund i @wordpress/env
-        wp-env start --update
       shell: bash
       env:
         WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
+
+    - name: Start wp-env
+      uses: nick-fields/retry@v3
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: wp-env start --update
 
     - name: Run Plugin Check
       run: |
