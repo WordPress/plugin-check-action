@@ -36,7 +36,7 @@
     "eslint-plugin-github": "^6.0.0",
     "eslint-plugin-prettier": "^5.4.1",
     "globals": "^16.2.0",
-    "prettier": "^3.6.0",
+    "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3"
   }
