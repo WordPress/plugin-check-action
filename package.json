@@ -27,15 +27,17 @@
     "@actions/core": "^1.11.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.10",
-    "@typescript-eslint/eslint-plugin": "^8.21.0",
-    "@typescript-eslint/parser": "^8.21.0",
-    "@vercel/ncc": "^0.38.3",
-    "eslint": "^9.19.0",
-    "eslint-plugin-github": "^5.1.5",
-    "eslint-plugin-prettier": "^5.2.3",
-    "prettier": "^3.4.2",
-    "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3"
+    "@eslint/js": "^9.37.0",
+    "@types/node": "^24.7.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.0",
+    "@vercel/ncc": "^0.38.4",
+    "eslint": "^9.37.0",
+    "eslint-plugin-github": "^6.0.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.5",
+    "typescript": "^5.9.3"
   }
 }

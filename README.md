@@ -45,6 +45,13 @@ See [action.yml](action.yml)
     # Default: ''
     exclude-checks: ''
 
+    # List of error codes to ignore.
+    # Each error code should be separated with new lines.
+    # Examples: textdomain_mismatch, WordPress.Security.EscapeOutput.OutputNotEscaped.
+    #
+    # Default: ''
+    ignore-codes: ''
+
     # List of categories to limit checks to.
     # Each category should be separated with new lines.
     # Examples: general, security
