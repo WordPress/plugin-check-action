@@ -153,9 +153,16 @@ runs:
         echo "::endgroup::"
 
         wp-env run cli wp plugin activate $PLUGIN_SLUG
+        
+        echo "::group::Run Plugin Check"
 
         # Run Plugin Check
         wp-env run cli wp plugin check $PLUGIN_SLUG --format=json $ADDITIONAL_ARGS --require=./wp-content/plugins/plugin-check/cli.php > ${{ runner.temp }}/plugin-check-results.txt
+        
+        cat ${{ runner.temp }}/plugin-check-results.txt
+
+        echo "::endgroup::"
+
       shell: bash
       env:
         CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
@@ -181,3 +188,9 @@ runs:
       env:
         INPUT_REPO_TOKEN: ${{ inputs.repo-token }}
         STRICT: ${{ inputs.strict }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+      with:
+        name: plugin-check-results
+        path: ${{ runner.temp }}/plugin-check-results.txt
