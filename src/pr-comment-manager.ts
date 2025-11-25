@@ -24,11 +24,6 @@ export class PRCommentManager {
 	}
 
 	async postComment(commentBody: string): Promise<void> {
-		await this.deleteExistingComments();
-		await this.createComment(commentBody);
-	}
-
-	private async deleteExistingComments(): Promise<void> {
 		try {
 			info('Searching for existing plugin check comments...');
 
@@ -42,30 +37,30 @@ export class PRCommentManager {
 				comment.body?.includes(COMMENT_IDENTIFIER),
 			);
 
-			if (existingComments.length === 0) {
-				info('No existing plugin check comments found.');
-				return;
-			}
+			const bodyWithIdentifier = commentBody.includes(COMMENT_IDENTIFIER)
+				? commentBody
+				: `${COMMENT_IDENTIFIER}\n\n${commentBody}`;
 
-			info(`Found ${existingComments.length} existing comment(s) to delete.`);
+			if (existingComments.length > 0) {
+				info(`Found ${existingComments.length} existing comment(s).`);
 
-			for (const comment of existingComments) {
-				try {
-					await this.octokit.rest.issues.deleteComment({
-						owner: this.owner,
-						repo: this.repo,
-						comment_id: comment.id,
-					});
-					info(`Deleted comment ID: ${comment.id}`);
-				} catch (error) {
-					warning(
-						`Failed to delete comment ID ${comment.id}: ${error instanceof Error ? error.message : String(error)}`,
-					);
+				// Update the last comment
+				const lastComment = existingComments[existingComments.length - 1];
+				await this.updateComment(lastComment.id, bodyWithIdentifier);
+
+				// Delete any duplicates
+				if (existingComments.length > 1) {
+					info('Deleting duplicate comments...');
+					for (let i = 0; i < existingComments.length - 1; i++) {
+						await this.deleteComment(existingComments[i].id);
+					}
 				}
+			} else {
+				await this.createComment(bodyWithIdentifier);
 			}
 		} catch (error) {
 			warning(
-				`Failed to fetch existing comments: ${error instanceof Error ? error.message : String(error)}`,
+				`Failed to post/update comment: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
 	}
@@ -73,22 +68,51 @@ export class PRCommentManager {
 	private async createComment(commentBody: string): Promise<void> {
 		try {
 			info('Creating new plugin check comment...');
-
-			const bodyWithIdentifier = commentBody.includes(COMMENT_IDENTIFIER)
-				? commentBody
-				: `${COMMENT_IDENTIFIER}\n\n${commentBody}`;
-
 			await this.octokit.rest.issues.createComment({
 				owner: this.owner,
 				repo: this.repo,
 				issue_number: this.prNumber,
-				body: bodyWithIdentifier,
+				body: commentBody,
 			});
-
 			info('Successfully created plugin check comment.');
 		} catch (error) {
 			throw new Error(
 				`Failed to create comment: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	private async updateComment(
+		commentId: number,
+		commentBody: string,
+	): Promise<void> {
+		try {
+			info(`Updating comment ID: ${commentId}...`);
+			await this.octokit.rest.issues.updateComment({
+				owner: this.owner,
+				repo: this.repo,
+				comment_id: commentId,
+				body: commentBody,
+			});
+			info('Successfully updated plugin check comment.');
+		} catch (error) {
+			throw new Error(
+				`Failed to update comment: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	private async deleteComment(commentId: number): Promise<void> {
+		try {
+			await this.octokit.rest.issues.deleteComment({
+				owner: this.owner,
+				repo: this.repo,
+				comment_id: commentId,
+			});
+			info(`Deleted comment ID: ${commentId}`);
+		} catch (error) {
+			warning(
+				`Failed to delete comment ID ${commentId}: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
 	}

@@ -1,4 +1,12 @@
-import { setFailed, error, warning, getInput } from '@actions/core';
+import {
+	setFailed,
+	info,
+	error,
+	warning,
+	getInput,
+	startGroup,
+	endGroup,
+} from '@actions/core';
 import { context } from '@actions/github';
 import { existsSync, readFileSync } from 'node:fs';
 import { PRCommentManager } from './pr-comment-manager';
@@ -51,17 +59,19 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 }
 
 async function postPRComment() {
+	startGroup('Posting PR comment');
+
 	try {
 		const token = getInput('repo-token') || process.env.INPUT_REPO_TOKEN;
 		const prNumber = context.payload.pull_request?.number;
 
 		if (!token) {
-			console.log('No GitHub token provided, skipping PR comment');
+			info('No GitHub token provided, skipping PR comment');
 			return;
 		}
 
 		if (!prNumber) {
-			console.log('Not a pull request, skipping PR comment');
+			info('Not a pull request, skipping PR comment');
 			return;
 		}
 
@@ -78,8 +88,10 @@ async function postPRComment() {
 
 		await manager.postComment(commentBody);
 	} catch (err) {
-		console.error('Failed to post PR comment:', err);
+		error(`Failed to post PR comment: ${err}`);
 	}
+
+	endGroup();
 }
 
 postPRComment();
