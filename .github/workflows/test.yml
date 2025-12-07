@@ -55,4 +55,4 @@ jobs:
         continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
           build-dir: 'tests/fixtures/hello-dolly-copy'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.WORKFLOW_TOKEN }}
