@@ -6,6 +6,10 @@ on: # rebuild any PRs and main branch changes
     - main
     - 'releases/*'
 
+permissions:
+    contents: write
+    pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -55,4 +59,4 @@ jobs:
         continue-on-error: true # Since we expect it to always fail for the test plugin.
         with:
           build-dir: 'tests/fixtures/hello-dolly-copy'
-          repo-token: ${{ secrets.WORKFLOW_TOKEN }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
