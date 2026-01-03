@@ -193,6 +193,6 @@ runs:
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       if: ${{ always() }}
       with:
-        name: plugin-check-results
+        name: plugin-check-results${{ inputs.slug && format('-{0}', inputs.slug) || '' }}
         path: ${{ runner.temp }}/plugin-check-results.txt
         if-no-files-found: ignore
