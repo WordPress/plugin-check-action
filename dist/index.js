@@ -146,7 +146,11 @@ ${sections.join('\n\n')}`;
         const separator = this.tableRow([':-----:', '--------', '----------']);
         const rows = results.map(result => {
             const line = result.line > 0 ? `\`${result.line}\`` : '`0`';
-            return this.tableRow([line, result.code, (0, utils_1.decodeHtmlEntities)(result.message)]);
+            return this.tableRow([
+                line,
+                result.code,
+                (0, utils_1.decodeHtmlEntities)(result.message),
+            ]);
         });
         return [header, separator, ...rows].join('\n');
     }
@@ -277,21 +281,30 @@ exports.decodeHtmlEntities = decodeHtmlEntities;
  * @returns The decoded text
  */
 function decodeHtmlEntities(text) {
-    const entities = {
+    const namedEntities = {
         '&quot;': '"',
-        '&#034;': '"',
         '&apos;': "'",
-        '&#039;': "'",
         '&amp;': '&',
-        '&#038;': '&',
         '&lt;': '<',
-        '&#060;': '<',
         '&gt;': '>',
-        '&#062;': '>',
         '&nbsp;': ' ',
-        '&#160;': ' ',
     };
-    return text.replace(/&(?:#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, match => entities[match] || match);
+    return text.replace(/&(?:#x([0-9a-fA-F]+)|#(\d+)|([a-zA-Z]+));/g, (match, hex, dec, named) => {
+        if (hex) {
+            // Hexadecimal entity
+            return String.fromCharCode(parseInt(hex, 16));
+        }
+        if (dec) {
+            // Decimal entity
+            return String.fromCharCode(parseInt(dec, 10));
+        }
+        if (named && namedEntities[`&${named};`]) {
+            // Named entity
+            return namedEntities[`&${named};`];
+        }
+        // Unknown entity, return as-is
+        return match;
+    });
 }
 
 

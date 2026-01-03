@@ -6,23 +6,32 @@
  * @returns The decoded text
  */
 export function decodeHtmlEntities(text: string): string {
-	const entities: Record<string, string> = {
+	const namedEntities: Record<string, string> = {
 		'&quot;': '"',
-		'&#034;': '"',
 		'&apos;': "'",
-		'&#039;': "'",
 		'&amp;': '&',
-		'&#038;': '&',
 		'&lt;': '<',
-		'&#060;': '<',
 		'&gt;': '>',
-		'&#062;': '>',
 		'&nbsp;': ' ',
-		'&#160;': ' ',
 	};
 
 	return text.replace(
-		/&(?:#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g,
-		match => entities[match] || match,
+		/&(?:#x([0-9a-fA-F]+)|#(\d+)|([a-zA-Z]+));/g,
+		(match, hex, dec, named) => {
+			if (hex) {
+				// Hexadecimal entity
+				return String.fromCharCode(parseInt(hex, 16));
+			}
+			if (dec) {
+				// Decimal entity
+				return String.fromCharCode(parseInt(dec, 10));
+			}
+			if (named && namedEntities[`&${named};`]) {
+				// Named entity
+				return namedEntities[`&${named};`];
+			}
+			// Unknown entity, return as-is
+			return match;
+		},
 	);
 }
