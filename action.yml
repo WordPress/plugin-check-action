@@ -127,6 +127,14 @@ runs:
         EXCLUDE_FILES="${EXCLUDE_FILES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         IGNORE_CODES="${IGNORE_CODES//$'\n'/,}"
+        
+        # Always exclude .wp-env.json as it's created by this action
+        if [ -n "$EXCLUDE_FILES" ]; then
+          EXCLUDE_FILES="--exclude-files=${EXCLUDE_FILES#--exclude-files=},.wp-env.json"
+        else
+          EXCLUDE_FILES="--exclude-files=.wp-env.json"
+        fi
+        
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_CODES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
 
         echo "::group::Debugging information"
