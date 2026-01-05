@@ -96,6 +96,13 @@ runs:
         
         PLUGIN_SLUG=$(basename $PLUGIN_DIR)
         echo "PLUGIN_SLUG=$PLUGIN_SLUG" >> "$GITHUB_ENV"
+        
+        # Check if .wp-env.json exists in the plugin directory before we create one
+        if [ -f "$PLUGIN_DIR/.wp-env.json" ]; then
+          echo "WP_ENV_JSON_EXISTS=true" >> "$GITHUB_ENV"
+        else
+          echo "WP_ENV_JSON_EXISTS=false" >> "$GITHUB_ENV"
+        fi
       shell: bash
       env:
         BUILD_DIR: ${{ inputs.build-dir }}
@@ -127,6 +134,16 @@ runs:
         EXCLUDE_FILES="${EXCLUDE_FILES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         IGNORE_CODES="${IGNORE_CODES//$'\n'/,}"
+        
+        # Only exclude .wp-env.json if it was created by this action (didn't exist before)
+        if [ "$WP_ENV_JSON_EXISTS" = "false" ]; then
+          if [ -n "$EXCLUDE_FILES" ]; then
+            EXCLUDE_FILES="--exclude-files=${EXCLUDE_FILES#--exclude-files=},.wp-env.json"
+          else
+            EXCLUDE_FILES="--exclude-files=.wp-env.json"
+          fi
+        fi
+        
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_CODES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
 
         echo "::group::Debugging information"
