@@ -1,3 +1,5 @@
+import { decodeHtmlEntities } from './utils';
+
 export interface CheckResult {
 	line: number;
 	column: number;
@@ -208,7 +210,11 @@ ${sections.join('\n\n')}`;
 
 		const rows = results.map(result => {
 			const line = result.line > 0 ? `\`${result.line}\`` : '`0`';
-			return this.tableRow([line, result.code, result.message]);
+			return this.tableRow([
+				line,
+				result.code,
+				decodeHtmlEntities(result.message),
+			]);
 		});
 
 		return [header, separator, ...rows].join('\n');
