@@ -2,12 +2,13 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 439:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PRCommentFormatter = void 0;
+const utils_1 = __nccwpck_require__(9277);
 class PRCommentFormatter {
     fileResults = [];
     constructor(fileResultsMap) {
@@ -145,7 +146,11 @@ ${sections.join('\n\n')}`;
         const separator = this.tableRow([':-----:', '--------', '----------']);
         const rows = results.map(result => {
             const line = result.line > 0 ? `\`${result.line}\`` : '`0`';
-            return this.tableRow([line, result.code, result.message]);
+            return this.tableRow([
+                line,
+                result.code,
+                (0, utils_1.decodeHtmlEntities)(result.message),
+            ]);
         });
         return [header, separator, ...rows].join('\n');
     }
@@ -257,6 +262,50 @@ class PRCommentManager {
     }
 }
 exports.PRCommentManager = PRCommentManager;
+
+
+/***/ }),
+
+/***/ 9277:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.decodeHtmlEntities = decodeHtmlEntities;
+/**
+ * Decodes HTML entities in a string.
+ * This handles common HTML entities found in WordPress Plugin Check output.
+ *
+ * @param text - The text containing HTML entities
+ * @returns The decoded text
+ */
+function decodeHtmlEntities(text) {
+    const namedEntities = {
+        '&quot;': '"',
+        '&apos;': "'",
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&nbsp;': ' ',
+    };
+    return text.replace(/&(?:#x([0-9a-fA-F]+)|#(\d+)|([a-zA-Z]+));/g, (match, hex, dec, named) => {
+        if (hex) {
+            // Hexadecimal entity
+            return String.fromCharCode(parseInt(hex, 16));
+        }
+        if (dec) {
+            // Decimal entity
+            return String.fromCharCode(parseInt(dec, 10));
+        }
+        if (named && namedEntities[`&${named};`]) {
+            // Named entity
+            return namedEntities[`&${named};`];
+        }
+        // Unknown entity, return as-is
+        return match;
+    });
+}
 
 
 /***/ }),
@@ -33115,6 +33164,7 @@ const github_1 = __nccwpck_require__(3228);
 const node_fs_1 = __nccwpck_require__(3024);
 const pr_comment_manager_1 = __nccwpck_require__(3726);
 const pr_comment_formatter_1 = __nccwpck_require__(439);
+const utils_1 = __nccwpck_require__(9277);
 const args = process.argv.slice(2);
 const file = args[0];
 if (!(0, node_fs_1.existsSync)(file)) {
@@ -33142,7 +33192,7 @@ for (let i = 0; i < fileContents.length - 1; i++) {
         const func = result.type === 'ERROR' || process.env.STRICT === 'true'
             ? core_1.error
             : core_1.warning;
-        func(result.message, {
+        func((0, utils_1.decodeHtmlEntities)(result.message), {
             title: result.code,
             file: fileName,
             startLine: result.line,

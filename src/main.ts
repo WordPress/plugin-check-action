@@ -11,6 +11,7 @@ import { context } from '@actions/github';
 import { existsSync, readFileSync } from 'node:fs';
 import { PRCommentManager } from './pr-comment-manager';
 import { PRCommentFormatter, CheckResult } from './pr-comment-formatter';
+import { decodeHtmlEntities } from './utils';
 
 const args = process.argv.slice(2);
 
@@ -49,7 +50,7 @@ for (let i = 0; i < fileContents.length - 1; i++) {
 			result.type === 'ERROR' || process.env.STRICT === 'true'
 				? error
 				: warning;
-		func(result.message, {
+		func(decodeHtmlEntities(result.message), {
 			title: result.code,
 			file: fileName,
 			startLine: result.line,
