@@ -24,7 +24,7 @@
     "all": "npm run build && npm run format && npm run lint && npm run package"
   },
   "dependencies": {
-    "@actions/core": "^2.0.1",
+    "@actions/core": "^2.0.2",
     "@actions/github": "^6.0.1"
   },
   "devDependencies": {
