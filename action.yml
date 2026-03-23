@@ -119,7 +119,7 @@ runs:
         WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
 
     - name: Start wp-env
-      uses: nick-fields/retry@v3
+      uses: nick-fields/retry@v4
       with:
         timeout_minutes: 10
         max_attempts: 3
