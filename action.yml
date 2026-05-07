@@ -351,8 +351,14 @@ runs:
           PLAYGROUND_ARGS+=("--blueprint-may-read-adjacent-files")
         fi
 
+        PLAYGROUND_CLI_VERSION="$(node -p "const pkg=require(process.argv[1]); pkg.dependencies?.['@wp-playground/cli'] ?? pkg.devDependencies?.['@wp-playground/cli'] ?? ''" "$GITHUB_ACTION_PATH/package.json")"
+        if [ -z "$PLAYGROUND_CLI_VERSION" ]; then
+          echo "::error::Failed to determine @wp-playground/cli version from action package.json"
+          exit 1
+        fi
+
         # Playground currently exposes WP-CLI through /tmp/wp-cli.phar.
-        npx --yes @wp-playground/cli@3.1.28 php "${PLAYGROUND_ARGS[@]}" -- /tmp/wp-cli.phar plugin check "$PLUGIN_SLUG" --format=json "${ADDITIONAL_ARGS[@]}" > ${{ runner.temp }}/plugin-check-results.txt
+        npx --yes "@wp-playground/cli@$PLAYGROUND_CLI_VERSION" php "${PLAYGROUND_ARGS[@]}" -- /tmp/wp-cli.phar plugin check "$PLUGIN_SLUG" --format=json "${ADDITIONAL_ARGS[@]}" > ${{ runner.temp }}/plugin-check-results.txt
 
         cat ${{ runner.temp }}/plugin-check-results.txt
 
