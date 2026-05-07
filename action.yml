@@ -116,6 +116,7 @@ runs:
         if [ -n "$PLUGIN_FILE" ]; then
           echo "PLUGIN_FILE=$PLUGIN_FILE" >> "$GITHUB_ENV"
 
+          # Parse the Requires Plugins header into a space-separated list of slugs.
           DEPENDENCIES=$(sed -n 's/^[[:space:]]*Requires Plugins:[[:space:]]*//Ip' "$PLUGIN_FILE" | head -n 1 | tr ',' '\n' | tr -d '\r' | sed '/^[[:space:]]*$/d;s/^[[:space:]]*//;s/[[:space:]]*$//' | paste -sd' ' -)
           echo "PLUGIN_DEPENDENCIES=$DEPENDENCIES" >> "$GITHUB_ENV"
         else
@@ -222,14 +223,22 @@ runs:
           outputDirectory,
           `.plugin-check-blueprint-${process.env.PLUGIN_SLUG}.json`
         );
-        const blueprint = userBlueprintPath
-          ? mergeBlueprint(
+        let blueprint = baseBlueprint;
+
+        if (userBlueprintPath) {
+          try {
+            blueprint = mergeBlueprint(
               baseBlueprint,
               JSON.parse(fs.readFileSync(userBlueprintPath, 'utf8'))
-            )
-          : baseBlueprint;
+            );
+          } catch (error) {
+            throw new Error(
+              `Failed to read blueprint "${userBlueprintPath}": ${error.message}`
+            );
+          }
+        }
 
-        fs.writeFileSync(outputPath, JSON.stringify(blueprint));
+        fs.writeFileSync(outputPath, JSON.stringify(blueprint, null, 2));
         fs.writeFileSync(
           process.env.GITHUB_ENV,
           `PLAYGROUND_BLUEPRINT=${outputPath}\n`,
@@ -309,6 +318,7 @@ runs:
           PLAYGROUND_ARGS+=("--blueprint-may-read-adjacent-files")
         fi
 
+        # Playground currently exposes WP-CLI through /tmp/wp-cli.phar.
         npx @wp-playground/cli php "${PLAYGROUND_ARGS[@]}" -- /tmp/wp-cli.phar plugin check "$PLUGIN_SLUG" --format=json "${ADDITIONAL_ARGS[@]}" > ${{ runner.temp }}/plugin-check-results.txt
 
         cat ${{ runner.temp }}/plugin-check-results.txt
