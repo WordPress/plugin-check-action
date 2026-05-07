@@ -126,6 +126,11 @@ runs:
         fi
 
         if [ -n "$BLUEPRINT" ]; then
+          if [ ! -f "$BLUEPRINT" ]; then
+            echo "Blueprint file not found: $BLUEPRINT" >&2
+            exit 1
+          fi
+
           BLUEPRINT_PATH=$(realpath "$BLUEPRINT")
           echo "BLUEPRINT_PATH=$BLUEPRINT_PATH" >> "$GITHUB_ENV"
 
@@ -174,11 +179,17 @@ runs:
           return override;
         };
 
+        const pluginSlug = process.env.PLUGIN_SLUG || '';
+
+        if (!/^[A-Za-z0-9_][A-Za-z0-9._-]*$/.test(pluginSlug)) {
+          throw new Error(`Invalid plugin slug "${pluginSlug}".`);
+        }
+
         const dependencies = (process.env.PLUGIN_DEPENDENCIES || '')
           .split(/\s+/)
           .filter(Boolean);
         const invalidDependency = dependencies.find(
-          (dependency) => !/^[a-z0-9-]+$/.test(dependency)
+          (dependency) => !/^[a-z0-9][a-z0-9-]*$/.test(dependency)
         );
 
         if (invalidDependency) {
@@ -210,7 +221,7 @@ runs:
         steps.push(
           {
             step: 'wp-cli',
-            command: `wp plugin activate ${process.env.PLUGIN_SLUG}`,
+            command: `wp plugin activate ${pluginSlug}`,
           },
           {
             step: 'cp',
@@ -231,7 +242,7 @@ runs:
           : process.env.RUNNER_TEMP;
         const outputPath = path.join(
           outputDirectory,
-          `.plugin-check-blueprint-${process.env.PLUGIN_SLUG}.json`
+          `.plugin-check-blueprint-${pluginSlug}.json`
         );
         let blueprint = baseBlueprint;
 
