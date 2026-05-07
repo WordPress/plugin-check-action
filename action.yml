@@ -335,7 +335,7 @@ runs:
         else
           echo "Plugin has no dependencies"
         fi
-        node -e "const fs=require('node:fs'); const blueprint=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log('Generated Playground blueprint:', process.argv[1]); console.log('Blueprint step count:', Array.isArray(blueprint.steps) ? blueprint.steps.length : 0);" "$PLAYGROUND_BLUEPRINT"
+        node -e "const fs=require('node:fs'); try { const blueprint=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log('Generated Playground blueprint:', process.argv[1]); console.log('Blueprint step count:', Array.isArray(blueprint.steps) ? blueprint.steps.length : 0); } catch (error) { console.error('Failed to summarize Playground blueprint:', error.message); process.exit(1); }" "$PLAYGROUND_BLUEPRINT"
         echo "::endgroup::"
 
         echo "::group::Run Plugin Check"
