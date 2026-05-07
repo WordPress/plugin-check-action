@@ -117,7 +117,8 @@ runs:
           echo "PLUGIN_FILE=$PLUGIN_FILE" >> "$GITHUB_ENV"
 
           # Parse the Requires Plugins header into a space-separated list of slugs.
-          DEPENDENCIES=$(sed -n 's/^[[:space:]]*Requires Plugins:[[:space:]]*//Ip' "$PLUGIN_FILE" | head -n 1 | tr ',' '\n' | tr -d '\r' | sed '/^[[:space:]]*$/d;s/^[[:space:]]*//;s/[[:space:]]*$//' | paste -sd' ' -)
+          DEPENDENCIES=$(sed -n 's/^[[:space:]]*Requires Plugins:[[:space:]]*//Ip' "$PLUGIN_FILE" | head -n 1)
+          DEPENDENCIES=$(printf '%s' "$DEPENDENCIES" | tr ',' '\n' | tr -d '\r' | sed '/^[[:space:]]*$/d;s/^[[:space:]]*//;s/[[:space:]]*$//' | paste -sd' ' -)
           echo "PLUGIN_DEPENDENCIES=$DEPENDENCIES" >> "$GITHUB_ENV"
         else
           echo "PLUGIN_FILE=" >> "$GITHUB_ENV"
@@ -176,6 +177,15 @@ runs:
         const dependencies = (process.env.PLUGIN_DEPENDENCIES || '')
           .split(/\s+/)
           .filter(Boolean);
+        const invalidDependency = dependencies.find(
+          (dependency) => !/^[a-z0-9-]+$/.test(dependency)
+        );
+
+        if (invalidDependency) {
+          throw new Error(
+            `Invalid dependency slug "${invalidDependency}" in Requires Plugins header.`
+          );
+        }
         const steps = [
           {
             step: 'installPlugin',
