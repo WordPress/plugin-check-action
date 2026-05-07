@@ -335,7 +335,7 @@ runs:
         else
           echo "Plugin has no dependencies"
         fi
-        cat "$PLAYGROUND_BLUEPRINT"
+        node -e "const fs=require('node:fs'); const blueprint=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log('Generated Playground blueprint:', process.argv[1]); console.log('Blueprint step count:', Array.isArray(blueprint.steps) ? blueprint.steps.length : 0);" "$PLAYGROUND_BLUEPRINT"
         echo "::endgroup::"
 
         echo "::group::Run Plugin Check"
@@ -352,7 +352,7 @@ runs:
         fi
 
         # Playground currently exposes WP-CLI through /tmp/wp-cli.phar.
-        npx @wp-playground/cli php "${PLAYGROUND_ARGS[@]}" -- /tmp/wp-cli.phar plugin check "$PLUGIN_SLUG" --format=json "${ADDITIONAL_ARGS[@]}" > ${{ runner.temp }}/plugin-check-results.txt
+        npx --yes @wp-playground/cli@3.1.28 php "${PLAYGROUND_ARGS[@]}" -- /tmp/wp-cli.phar plugin check "$PLUGIN_SLUG" --format=json "${ADDITIONAL_ARGS[@]}" > ${{ runner.temp }}/plugin-check-results.txt
 
         cat ${{ runner.temp }}/plugin-check-results.txt
 
