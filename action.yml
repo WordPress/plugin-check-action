@@ -101,6 +101,7 @@ runs:
         PLUGIN_SLUG=$(basename "$PLUGIN_DIR")
         echo "PLUGIN_SLUG=$PLUGIN_SLUG" >> "$GITHUB_ENV"
 
+        shopt -s nullglob
         PLUGIN_FILE=''
         for candidate in "$PLUGIN_DIR"/*.php; do
           if [ ! -f "$candidate" ]; then
@@ -112,6 +113,7 @@ runs:
             break
           fi
         done
+        shopt -u nullglob
 
         if [ -n "$PLUGIN_FILE" ]; then
           echo "PLUGIN_FILE=$PLUGIN_FILE" >> "$GITHUB_ENV"
@@ -180,6 +182,7 @@ runs:
         };
 
         const pluginSlug = process.env.PLUGIN_SLUG || '';
+        const quoteForShell = (value) => `'${value.replace(/'/g, `'\\''`)}'`;
 
         if (!/^[A-Za-z0-9_][A-Za-z0-9._-]*$/.test(pluginSlug)) {
           throw new Error(`Invalid plugin slug "${pluginSlug}".`);
@@ -211,17 +214,26 @@ runs:
           },
         ];
 
-        if (dependencies.length) {
-          steps.push({
-            step: 'wp-cli',
-            command: `wp plugin install --activate ${dependencies.join(' ')}`,
-          });
+        for (const dependency of dependencies) {
+          steps.push(
+            {
+              step: 'installPlugin',
+              pluginData: {
+                resource: 'wordpress.org/plugins',
+                slug: dependency,
+              },
+            },
+            {
+              step: 'wp-cli',
+              command: `wp plugin activate ${quoteForShell(dependency)}`,
+            }
+          );
         }
 
         steps.push(
           {
             step: 'wp-cli',
-            command: `wp plugin activate ${pluginSlug}`,
+            command: `wp plugin activate ${quoteForShell(pluginSlug)}`,
           },
           {
             step: 'cp',
