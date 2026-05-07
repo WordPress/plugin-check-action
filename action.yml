@@ -353,7 +353,7 @@ runs:
 
         PLAYGROUND_CLI_VERSION="$(node -p "const pkg=require(process.argv[1]); pkg.dependencies?.['@wp-playground/cli'] ?? pkg.devDependencies?.['@wp-playground/cli'] ?? ''" "$GITHUB_ACTION_PATH/package.json")"
         if [ -z "$PLAYGROUND_CLI_VERSION" ]; then
-          echo "::error::Failed to determine @wp-playground/cli version from action package.json"
+          echo "::error::Failed to determine @wp-playground/cli version from $GITHUB_ACTION_PATH/package.json"
           exit 1
         fi
 
