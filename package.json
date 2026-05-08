@@ -21,6 +21,7 @@
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
+    "test": "vitest run",
     "all": "npm run build && npm run format && npm run lint && npm run package"
   },
   "dependencies": {
@@ -39,6 +40,7 @@
     "globals": "^17.5.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.4.9",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }
