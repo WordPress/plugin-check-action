@@ -1,0 +1,2 @@
+FILE: /path/to/plugin/plugin-file.php
+[{"line":10,"column":1,"type":"WARNING","code":"plugin_review_phpcs","message":"Missing file doc comment"},{"line":25,"column":5,"type":"WARNING","code":"plugin_review_phpcs","message":"Function comment is missing"}]
