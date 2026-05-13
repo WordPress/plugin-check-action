@@ -10,8 +10,9 @@ import {
 import { context } from '@actions/github';
 import { existsSync, readFileSync } from 'node:fs';
 import { PRCommentManager } from './pr-comment-manager';
-import { PRCommentFormatter, CheckResult } from './pr-comment-formatter';
+import { PRCommentFormatter } from './pr-comment-formatter';
 import { decodeHtmlEntities } from './utils';
+import { parseResultsFile } from './parse-results';
 
 const args = process.argv.slice(2);
 
@@ -22,22 +23,12 @@ if (!existsSync(file)) {
 }
 
 const fileContents = existsSync(file)
-	? readFileSync(file, { encoding: 'utf8' }).split('\n')
-	: [];
+	? readFileSync(file, { encoding: 'utf8' })
+	: '';
 
-const fileResultsMap = new Map<string, CheckResult[]>();
+const fileResultsMap = parseResultsFile(fileContents);
 
-for (let i = 0; i < fileContents.length - 1; i++) {
-	const line = fileContents[i];
-	if (!line.startsWith('FILE: ')) {
-		continue;
-	}
-
-	const fileName = line.split('FILE: ')[1];
-	const results: CheckResult[] = JSON.parse(fileContents[++i]) || [];
-
-	fileResultsMap.set(fileName, results);
-
+for (const [fileName, results] of fileResultsMap) {
 	if (results.length > 0 && process.env.STRICT === 'true') {
 		process.exitCode = 1;
 	}

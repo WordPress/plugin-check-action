@@ -15,7 +15,7 @@ export default tseslint.config(
 				...globals.node,
 			}
 		},
-		ignores: ["**/dist/", "**/lib/", "**/node_modules/", "**/jest.config.js"],
+		ignores: ["**/dist/", "**/lib/", "**/node_modules/", "**/jest.config.js", "vitest.config.ts"],
 		rules: {
 			camelcase: "off",
 			"i18n-text/no-en": "off",
