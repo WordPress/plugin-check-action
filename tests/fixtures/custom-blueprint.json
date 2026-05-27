@@ -1,0 +1,9 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "steps": [
+    {
+      "step": "wp-cli",
+      "command": "wp option update blogdescription 'Plugin Check test blueprint'"
+    }
+  ]
+}

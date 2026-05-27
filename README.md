@@ -4,6 +4,8 @@ A GitHub action to run [Plugin Check](https://wordpress.org/plugins/plugin-check
 
 Results are posted as file annotations.
 
+The action uses [WordPress Playground](https://wordpress.org/playground/) to set up WordPress for running Plugin Check.
+
 ## Example
 
 <img width="887" alt="Plugin Check error messages output on GitHub Actions" src="https://github.com/wordpress/plugin-check-action/assets/841956/31292472-51d5-487d-9878-1940a20e1e0b">
@@ -28,6 +30,11 @@ See [action.yml](action.yml)
     #
     # Default: './'
     build-dir: ''
+
+    # Optional WordPress Playground blueprint to merge with the default setup.
+    #
+    # Default: ''
+    blueprint: ''
 
     # List of checks to run.
     # Each check should be separated with new lines.
@@ -177,6 +184,7 @@ steps:
   uses: wordpress/plugin-check-action@v1
   with:
     build-dir: './my-awesome-plugin'
+    blueprint: './plugin-check-blueprint.json'
     exclude-directories: 'prefixed_vendor_dir,another_dir_to_ignore'
     categories: |
       performance

@@ -13,6 +13,10 @@ inputs:
     description: 'Build directory'
     required: false
     default: './'
+  blueprint:
+    description: 'Optional WordPress Playground blueprint to merge with the default setup'
+    required: false
+    default: ''
   checks:
     description: 'Only run specific checks'
     required: false
@@ -93,38 +97,208 @@ runs:
       run: |
         PLUGIN_DIR=$(realpath "$BUILD_DIR")
         echo "PLUGIN_DIR=$PLUGIN_DIR" >> "$GITHUB_ENV"
-        
-        PLUGIN_SLUG=$(basename $PLUGIN_DIR)
+
+        PLUGIN_SLUG=$(basename "$PLUGIN_DIR")
         echo "PLUGIN_SLUG=$PLUGIN_SLUG" >> "$GITHUB_ENV"
-        
-        # Check if .wp-env.json exists in the plugin directory before we create one
-        if [ -f "$PLUGIN_DIR/.wp-env.json" ]; then
-          echo "WP_ENV_JSON_EXISTS=true" >> "$GITHUB_ENV"
+
+        shopt -s nullglob
+        PLUGIN_FILE=''
+        for candidate in "$PLUGIN_DIR"/*.php; do
+          if [ ! -f "$candidate" ]; then
+            continue
+          fi
+
+          if grep -Eq '^[[:space:]]*Plugin Name:' "$candidate"; then
+            PLUGIN_FILE="$candidate"
+            break
+          fi
+        done
+        shopt -u nullglob
+
+        if [ -n "$PLUGIN_FILE" ]; then
+          echo "PLUGIN_FILE=$PLUGIN_FILE" >> "$GITHUB_ENV"
+
+          # Parse the Requires Plugins header into a space-separated list of slugs.
+          DEPENDENCIES=$(sed -n 's/^[[:space:]]*Requires Plugins:[[:space:]]*//Ip' "$PLUGIN_FILE" | head -n 1)
+          DEPENDENCIES=$(printf '%s' "$DEPENDENCIES" | tr ',' '\n' | tr -d '\r' | sed '/^[[:space:]]*$/d;s/^[[:space:]]*//;s/[[:space:]]*$//' | paste -sd' ' -)
+          echo "PLUGIN_DEPENDENCIES=$DEPENDENCIES" >> "$GITHUB_ENV"
         else
-          echo "WP_ENV_JSON_EXISTS=false" >> "$GITHUB_ENV"
+          echo "PLUGIN_FILE=" >> "$GITHUB_ENV"
+          echo "PLUGIN_DEPENDENCIES=" >> "$GITHUB_ENV"
+        fi
+
+        if [ -n "$BLUEPRINT" ]; then
+          if [ ! -f "$BLUEPRINT" ]; then
+            echo "Blueprint file not found: $BLUEPRINT" >&2
+            exit 1
+          fi
+
+          BLUEPRINT_PATH=$(realpath "$BLUEPRINT")
+          echo "BLUEPRINT_PATH=$BLUEPRINT_PATH" >> "$GITHUB_ENV"
+
+          case "$BLUEPRINT_PATH" in
+            "$PLUGIN_DIR"/*)
+              BLUEPRINT_EXCLUDE_FILE=$(realpath --relative-to="$PLUGIN_DIR" "$BLUEPRINT_PATH")
+              echo "BLUEPRINT_EXCLUDE_FILE=$BLUEPRINT_EXCLUDE_FILE" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "BLUEPRINT_EXCLUDE_FILE=" >> "$GITHUB_ENV"
+              ;;
+          esac
+        else
+          echo "BLUEPRINT_PATH=" >> "$GITHUB_ENV"
+          echo "BLUEPRINT_EXCLUDE_FILE=" >> "$GITHUB_ENV"
         fi
       shell: bash
       env:
         BUILD_DIR: ${{ inputs.build-dir }}
+        BLUEPRINT: ${{ inputs.blueprint }}
 
-    - name: Setup wp-env
+    - name: Prepare Playground blueprint
       run: |
-        touch .wp-env.json
-        > .wp-env.json
-        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"https://downloads.wordpress.org/plugin/plugin-check.zip\" ], \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
+        node <<'NODE'
+        const fs = require('node:fs');
+        const path = require('node:path');
 
-        npm -g --no-fund i @wordpress/env
+        const mergeBlueprint = (base, override) => {
+          if (Array.isArray(base) && Array.isArray(override)) {
+            return [...base, ...override];
+          }
+
+          if (
+            base &&
+            override &&
+            typeof base === 'object' &&
+            typeof override === 'object'
+          ) {
+            const merged = {...base};
+            for (const [key, value] of Object.entries(override)) {
+              merged[key] = key in base ? mergeBlueprint(base[key], value) : value;
+            }
+            return merged;
+          }
+
+          return override;
+        };
+
+        const pluginSlug = process.env.PLUGIN_SLUG || '';
+        const quoteForShell = (value) => `'${value.replace(/'/g, `'\\''`)}'`;
+
+        if (!/^[A-Za-z0-9_][A-Za-z0-9._-]*$/.test(pluginSlug)) {
+          throw new Error(`Invalid plugin slug "${pluginSlug}".`);
+        }
+
+        const dependencies = (process.env.PLUGIN_DEPENDENCIES || '')
+          .split(/\s+/)
+          .filter(Boolean);
+        const invalidDependency = dependencies.find(
+          (dependency) => !/^[a-z0-9][a-z0-9-]*$/.test(dependency)
+        );
+
+        if (invalidDependency) {
+          throw new Error(
+            `Invalid dependency slug "${invalidDependency}" in Requires Plugins header.`
+          );
+        }
+        const steps = [
+          {
+            step: 'installPlugin',
+            pluginData: {
+              resource: 'wordpress.org/plugins',
+              slug: 'plugin-check',
+            },
+          },
+          {
+            step: 'wp-cli',
+            command: 'wp plugin activate plugin-check',
+          },
+        ];
+
+        for (const dependency of dependencies) {
+          steps.push(
+            {
+              step: 'installPlugin',
+              pluginData: {
+                resource: 'wordpress.org/plugins',
+                slug: dependency,
+              },
+            },
+            {
+              step: 'wp-cli',
+              command: `wp plugin activate ${quoteForShell(dependency)}`,
+            }
+          );
+        }
+
+        steps.push(
+          {
+            step: 'wp-cli',
+            command: `wp plugin activate ${quoteForShell(pluginSlug)}`,
+          },
+          {
+            step: 'cp',
+            fromPath:
+              '/wordpress/wp-content/plugins/plugin-check/drop-ins/object-cache.copy.php',
+            toPath: '/wordpress/wp-content/object-cache.php',
+          }
+        );
+
+        const baseBlueprint = {
+          $schema: 'https://playground.wordpress.net/blueprint-schema.json',
+          steps,
+        };
+
+        const userBlueprintPath = process.env.BLUEPRINT_PATH;
+        const outputDirectory = userBlueprintPath
+          ? path.dirname(userBlueprintPath)
+          : process.env.RUNNER_TEMP;
+        const outputPath = path.join(
+          outputDirectory,
+          `.plugin-check-blueprint-${pluginSlug}.json`
+        );
+        let blueprint = baseBlueprint;
+
+        if (userBlueprintPath) {
+          try {
+            blueprint = mergeBlueprint(
+              baseBlueprint,
+              JSON.parse(fs.readFileSync(userBlueprintPath, 'utf8'))
+            );
+          } catch (error) {
+            throw new Error(
+              `Failed to read blueprint "${userBlueprintPath}": ${error.message}`
+            );
+          }
+        }
+
+        fs.writeFileSync(outputPath, JSON.stringify(blueprint, null, 2));
+        fs.writeFileSync(
+          process.env.GITHUB_ENV,
+          `PLAYGROUND_BLUEPRINT=${outputPath}\n`,
+          {flag: 'a'}
+        );
+
+        if (
+          process.env.PLUGIN_DIR &&
+          outputPath.startsWith(`${process.env.PLUGIN_DIR}${path.sep}`)
+        ) {
+          fs.writeFileSync(
+            process.env.GITHUB_ENV,
+            `PLAYGROUND_BLUEPRINT_EXCLUDE_FILE=${path.relative(
+              process.env.PLUGIN_DIR,
+              outputPath
+            )}\n`,
+            {flag: 'a'}
+          );
+        } else {
+          fs.writeFileSync(
+            process.env.GITHUB_ENV,
+            'PLAYGROUND_BLUEPRINT_EXCLUDE_FILE=\n',
+            {flag: 'a'}
+          );
+        }
+        NODE
       shell: bash
-      env:
-        WP_VERSION: ${{ inputs.wp-version == 'trunk' && '"WordPress/WordPress#master"' || 'null' }}
-
-    - name: Start wp-env
-      uses: nick-fields/retry@v4
-      with:
-        timeout_minutes: 10
-        max_attempts: 3
-        shell: bash
-        command: wp-env start --update
 
     - name: Run Plugin Check
       run: |
@@ -134,52 +308,61 @@ runs:
         EXCLUDE_FILES="${EXCLUDE_FILES//$'\n'/,}"
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         IGNORE_CODES="${IGNORE_CODES//$'\n'/,}"
-        
-        # Only exclude .wp-env.json if it was created by this action (didn't exist before)
-        if [ "$WP_ENV_JSON_EXISTS" = "false" ]; then
-          if [ -n "$EXCLUDE_FILES" ]; then
-            EXCLUDE_FILES="--exclude-files=${EXCLUDE_FILES#--exclude-files=},.wp-env.json"
-          else
-            EXCLUDE_FILES="--exclude-files=.wp-env.json"
+
+        for blueprint_file in "$BLUEPRINT_EXCLUDE_FILE" "$PLAYGROUND_BLUEPRINT_EXCLUDE_FILE"; do
+          if [ -n "$blueprint_file" ]; then
+            if [ -n "$EXCLUDE_FILES" ]; then
+              EXCLUDE_FILES="--exclude-files=${EXCLUDE_FILES#--exclude-files=},$blueprint_file"
+            else
+              EXCLUDE_FILES="--exclude-files=$blueprint_file"
+            fi
           fi
-        fi
-        
-        ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_CODES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
+        done
+
+        ADDITIONAL_ARGS=()
+        for arg in "$CHECKS" "$EXCLUDE_CHECKS" "$CATEGORIES" "$IGNORE_CODES" "$IGNORE_WARNINGS" "$IGNORE_ERRORS" "$INCLUDE_EXPERIMENTAL" "$EXCLUDE_FILES" "$EXCLUDE_DIRS" "$SEVERITY" "$ERROR_SEVERITY" "$WARNING_SEVERITY" "$INCLUDE_LOW_SEVERITY_ERRORS" "$INCLUDE_LOW_SEVERITY_WARNINGS" "$SLUG"; do
+          if [ -n "$arg" ]; then
+            ADDITIONAL_ARGS+=("$arg")
+          fi
+        done
 
         echo "::group::Debugging information"
-        wp-env run cli wp cli info
-        wp-env run cli wp plugin list
-        wp-env run cli wp plugin list-checks
-        wp-env run cli wp plugin list-check-categories
-        echo "::endgroup::"
-
-        echo "::group::Install dependencies"
-
-        # List all dependencies
-        wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
-        DEPENDENCIES=$(wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins | tr ',' ' ')
-        
-        if [ -z "$DEPENDENCIES" ]; then
-          echo "Plugin has no dependencies"
+        if [ -n "$PLUGIN_FILE" ]; then
+          echo "Detected plugin file: $PLUGIN_FILE"
+        fi
+        if [ -n "$PLUGIN_DEPENDENCIES" ]; then
+          echo "Installing plugin dependencies via blueprint: $PLUGIN_DEPENDENCIES"
         else
-          echo "Installing plugin dependencies: $DEPENDENCIES"
-          # Install all dependencies first.
-          wp-env run cli wp plugin install --activate $DEPENDENCIES
-        fi;
-        
+          echo "Plugin has no dependencies"
+        fi
+        node -e "const fs=require('node:fs'); try { const blueprint=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log('Generated Playground blueprint:', process.argv[1]); console.log('Blueprint step count:', Array.isArray(blueprint.steps) ? blueprint.steps.length : 0); } catch (error) { console.error('Failed to summarize Playground blueprint:', error.message); process.exit(1); }" "$PLAYGROUND_BLUEPRINT"
         echo "::endgroup::"
 
-        wp-env run cli wp plugin activate $PLUGIN_SLUG
-        
         echo "::group::Run Plugin Check"
 
-        # Run Plugin Check
-        wp-env run cli wp plugin check $PLUGIN_SLUG --format=json $ADDITIONAL_ARGS --require=./wp-content/plugins/plugin-check/cli.php > ${{ runner.temp }}/plugin-check-results.txt
-        
+        PLAYGROUND_ARGS=(
+          "--wp=$WP_VERSION"
+          "--verbosity=quiet"
+          "--mount=$PLUGIN_DIR:/wordpress/wp-content/plugins/$PLUGIN_SLUG"
+          "--blueprint=$PLAYGROUND_BLUEPRINT"
+        )
+
+        if [ -n "$BLUEPRINT_PATH" ]; then
+          PLAYGROUND_ARGS+=("--blueprint-may-read-adjacent-files")
+        fi
+
+        PLAYGROUND_CLI_VERSION="$(node -p "const pkg=require(process.argv[1]); pkg.dependencies?.['@wp-playground/cli'] ?? pkg.devDependencies?.['@wp-playground/cli'] ?? ''" "$GITHUB_ACTION_PATH/package.json")"
+        if [ -z "$PLAYGROUND_CLI_VERSION" ]; then
+          echo "::error::Failed to determine @wp-playground/cli version from $GITHUB_ACTION_PATH/package.json"
+          exit 1
+        fi
+
+        # Playground currently exposes WP-CLI through /tmp/wp-cli.phar.
+        npx --yes "@wp-playground/cli@$PLAYGROUND_CLI_VERSION" php "${PLAYGROUND_ARGS[@]}" -- /tmp/wp-cli.phar plugin check "$PLUGIN_SLUG" --format=json "${ADDITIONAL_ARGS[@]}" > ${{ runner.temp }}/plugin-check-results.txt
+
         cat ${{ runner.temp }}/plugin-check-results.txt
 
         echo "::endgroup::"
-
       shell: bash
       env:
         CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
@@ -197,6 +380,7 @@ runs:
         INCLUDE_LOW_SEVERITY_ERRORS: ${{ inputs.include-low-severity-errors == 'true' && '--include-low-severity-errors' || '' }}
         INCLUDE_LOW_SEVERITY_WARNINGS: ${{ inputs.include-low-severity-warnings == 'true' && '--include-low-severity-warnings' || '' }}
         SLUG: ${{ inputs.slug && format('--slug={0}', inputs.slug) || '' }}
+        WP_VERSION: ${{ inputs.wp-version }}
 
     - name: Process results
       run: |
