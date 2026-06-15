@@ -111,7 +111,7 @@ runs:
       run: |
         touch .wp-env.json
         > .wp-env.json
-        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"plugins\": [ \"https://downloads.wordpress.org/plugin/plugin-check.zip\" ], \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
+        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
 
         npm -g --no-fund i @wordpress/env
       shell: bash
@@ -124,7 +124,9 @@ runs:
         timeout_minutes: 10
         max_attempts: 3
         shell: bash
-        command: wp-env start --update
+        command: |
+          wp-env start --update
+          wp-env run cli wp cli info
 
     - name: Run Plugin Check
       run: |
@@ -145,6 +147,16 @@ runs:
         fi
         
         ADDITIONAL_ARGS="$CHECKS $EXCLUDE_CHECKS $CATEGORIES $IGNORE_CODES $IGNORE_WARNINGS $IGNORE_ERRORS $INCLUDE_EXPERIMENTAL $EXCLUDE_FILES $EXCLUDE_DIRS $SEVERITY $ERROR_SEVERITY $WARNING_SEVERITY $INCLUDE_LOW_SEVERITY_ERRORS $INCLUDE_LOW_SEVERITY_WARNINGS $SLUG"
+
+        echo "::group::Install Plugin Check"
+
+        if wp-env run cli wp plugin is-installed plugin-check; then
+          wp-env run cli wp plugin activate plugin-check
+        else
+          wp-env run cli wp plugin install plugin-check --activate
+        fi
+
+        echo "::endgroup::"
 
         echo "::group::Debugging information"
         wp-env run cli wp cli info
