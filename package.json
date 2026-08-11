@@ -20,7 +20,7 @@
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
-    "package": "ncc build --source-map --license licenses.txt",
+    "package": "ncc build --source-map --license licenses.txt src/main.ts -o dist",
     "test": "vitest run",
     "all": "npm run build && npm run format && npm run lint && npm run package"
   },
@@ -42,5 +42,9 @@
     "ts-jest": "^29.4.11",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "fsevents": false,
+    "unrs-resolver": false
   }
 }

@@ -10,9 +10,7 @@ import { CheckResult } from './pr-comment-formatter';
  * @param content - The full text content of the results file
  * @returns A map from file path to its array of check results
  */
-export function parseResultsFile(
-	content: string,
-): Map<string, CheckResult[]> {
+export function parseResultsFile(content: string): Map<string, CheckResult[]> {
 	const fileResultsMap = new Map<string, CheckResult[]>();
 	const lines = content.split('\n');
 
