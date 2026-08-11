@@ -51,6 +51,7 @@ jobs:
 
       - name: Compare the expected and actual dist/ directories
         id: diff
+        continue-on-error: true
         run: |
           if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
             echo "Detected uncommitted changes after build. Run 'npm run all' and commit dist/. See status below:"
@@ -61,8 +62,14 @@ jobs:
       # If dist/ was different than expected, upload the expected version as an artifact.
       - name: Upload expected dist/
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+        if: ${{ steps.diff.outcome == 'failure' }}
         with:
+          name: dist
+          path: dist/
+
+      - name: Fail job if dist/ differs
+        if: ${{ steps.diff.outcome == 'failure' }}
+        run: exit 1
           name: dist
           path: dist/
 
