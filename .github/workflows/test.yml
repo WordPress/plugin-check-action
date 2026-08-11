@@ -70,8 +70,6 @@ jobs:
       - name: Fail job if dist/ differs
         if: ${{ steps.diff.outcome == 'failure' }}
         run: exit 1
-          name: dist
-          path: dist/
 
   test:
     runs-on: ubuntu-latest
