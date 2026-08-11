@@ -25,9 +25,9 @@ describe('parseResultsFile', () => {
 
 		expect(result.size).toBe(2);
 		expect(result.has('/path/to/plugin/plugin-file.php')).toBe(true);
-		expect(
-			result.has('/path/to/plugin/includes/class-my-plugin.php'),
-		).toBe(true);
+		expect(result.has('/path/to/plugin/includes/class-my-plugin.php')).toBe(
+			true,
+		);
 
 		const phpFileResults = result.get('/path/to/plugin/plugin-file.php')!;
 		expect(phpFileResults).toHaveLength(2);

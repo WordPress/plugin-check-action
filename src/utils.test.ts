@@ -7,13 +7,11 @@ describe('decodeHtmlEntities', () => {
 	});
 
 	it('decodes &quot; to double quote', () => {
-		expect(decodeHtmlEntities('Say &quot;hello&quot;')).toBe(
-			'Say "hello"',
-		);
+		expect(decodeHtmlEntities('Say &quot;hello&quot;')).toBe('Say "hello"');
 	});
 
-	it("decodes &apos; to single quote", () => {
-		expect(decodeHtmlEntities("It&apos;s fine")).toBe("It's fine");
+	it('decodes &apos; to single quote', () => {
+		expect(decodeHtmlEntities('It&apos;s fine')).toBe("It's fine");
 	});
 
 	it('decodes &amp; to ampersand', () => {

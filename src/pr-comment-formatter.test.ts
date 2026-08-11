@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { PRCommentFormatter } from './pr-comment-formatter';
 import type { CheckResult } from './pr-comment-formatter';
 
-function makeError(
-	overrides: Partial<CheckResult> = {},
-): CheckResult {
+function makeError(overrides: Partial<CheckResult> = {}): CheckResult {
 	return {
 		line: 1,
 		column: 1,
@@ -15,9 +13,7 @@ function makeError(
 	};
 }
 
-function makeWarning(
-	overrides: Partial<CheckResult> = {},
-): CheckResult {
+function makeWarning(overrides: Partial<CheckResult> = {}): CheckResult {
 	return {
 		line: 1,
 		column: 1,
@@ -77,9 +73,7 @@ describe('PRCommentFormatter', () => {
 		});
 
 		it('ignores files with empty results arrays', () => {
-			const map = new Map<string, CheckResult[]>([
-				['file.php', []],
-			]);
+			const map = new Map<string, CheckResult[]>([['file.php', []]]);
 			const formatter = new PRCommentFormatter(map);
 			expect(formatter.getSummary()).toEqual({
 				totalIssues: 0,
