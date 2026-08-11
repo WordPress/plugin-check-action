@@ -78,6 +78,7 @@ export class PRCommentManager {
 		} catch (error) {
 			throw new Error(
 				`Failed to create comment: ${error instanceof Error ? error.message : String(error)}`,
+				{ cause: error },
 			);
 		}
 	}
@@ -98,6 +99,7 @@ export class PRCommentManager {
 		} catch (error) {
 			throw new Error(
 				`Failed to update comment: ${error instanceof Error ? error.message : String(error)}`,
+				{ cause: error },
 			);
 		}
 	}
