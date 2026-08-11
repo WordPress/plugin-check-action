@@ -42,5 +42,9 @@
     "ts-jest": "^29.4.11",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "fsevents": false,
+    "unrs-resolver": false
   }
 }
