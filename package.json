@@ -14,9 +14,9 @@
     "node",
     "setup"
   ],
-  "main": "lib/main.js",
+  "main": "src/main.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
