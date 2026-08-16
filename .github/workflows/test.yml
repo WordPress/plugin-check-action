@@ -106,6 +106,15 @@ jobs:
         with:
           build-dir: 'tests/fixtures/plugin-with-dependencies'
 
+      # Reproduces https://github.com/WordPress/plugin-check-action/issues/611,
+      # where activating a plugin that requires WooCommerce fails because
+      # WooCommerce emits a deprecation notice during activation.
+      - name: Run plugin check (WooCommerce dependency)
+        uses: ./
+        continue-on-error: true # Since we expect it to always fail for the test plugin.
+        with:
+          build-dir: 'tests/fixtures/plugin-with-woocommerce-dependency'
+
       - name: Run plugin check (strict)
         uses: ./
         continue-on-error: true # Since we expect it to always fail for the test plugin.

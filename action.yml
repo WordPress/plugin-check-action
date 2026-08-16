@@ -103,6 +103,25 @@ runs:
         else
           echo "WP_ENV_JSON_EXISTS=false" >> "$GITHUB_ENV"
         fi
+
+        echo "::group::Debugging information (paths)"
+        echo "Working directory: $(pwd)"
+        echo "PLUGIN_DIR: $PLUGIN_DIR"
+        echo "PLUGIN_SLUG: $PLUGIN_SLUG"
+
+        # wp-env reads .wp-env.json and .wp-env.override.json from the current
+        # working directory, which is not necessarily the plugin directory.
+        for dir in "$(pwd)" "$PLUGIN_DIR"; do
+          for file in .wp-env.json .wp-env.override.json; do
+            if [ -f "$dir/$file" ]; then
+              echo "Found $dir/$file:"
+              cat "$dir/$file"
+            else
+              echo "No $dir/$file"
+            fi
+          done
+        done
+        echo "::endgroup::"
       shell: bash
       env:
         BUILD_DIR: ${{ inputs.build-dir }}
@@ -112,6 +131,11 @@ runs:
         touch .wp-env.json
         > .wp-env.json
         echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
+
+        echo "::group::Debugging information (wp-env config)"
+        echo "Generated .wp-env.json:"
+        cat .wp-env.json
+        echo "::endgroup::"
 
         npm -g --no-fund i @wordpress/env
       shell: bash
@@ -158,9 +182,24 @@ runs:
 
         echo "::endgroup::"
 
+        # Dumps everything that is useful when a plugin refuses to activate.
+        # See https://github.com/WordPress/plugin-check-action/issues/611.
+        dump_debug_state() {
+          echo "::group::Debugging information (environment state)"
+          wp-env run cli wp config list || true
+          wp-env run cli wp plugin list || true
+          wp-env run cli wp option get active_plugins --format=json || true
+          echo "PHP error reporting:"
+          wp-env run cli php -r 'echo "display_errors=", ini_get("display_errors"), " error_reporting=", ini_get("error_reporting"), " log_errors=", ini_get("log_errors"), " error_log=", ini_get("error_log"), PHP_EOL;' || true
+          echo "Debug log:"
+          wp-env run cli sh -c 'cat wp-content/debug.log 2>/dev/null || echo "No wp-content/debug.log"' || true
+          echo "::endgroup::"
+        }
+
         echo "::group::Debugging information"
         wp-env run cli wp cli info
         wp-env run cli wp plugin list
+        wp-env run cli wp config list || true
         wp-env run cli wp plugin list-checks
         wp-env run cli wp plugin list-check-categories
         echo "::endgroup::"
@@ -170,19 +209,30 @@ runs:
         # List all dependencies
         wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins
         DEPENDENCIES=$(wp-env run cli wp plugin get $PLUGIN_SLUG --field=requires_plugins | tr ',' ' ')
-        
+
+        echo "Raw dependencies value: $(printf '%q' "$DEPENDENCIES")"
+
         if [ -z "$DEPENDENCIES" ]; then
           echo "Plugin has no dependencies"
         else
           echo "Installing plugin dependencies: $DEPENDENCIES"
           # Install all dependencies first.
-          wp-env run cli wp plugin install --activate $DEPENDENCIES
+          if ! wp-env run cli wp plugin install --activate $DEPENDENCIES; then
+            echo "::endgroup::"
+            echo "::error::Failed to install and activate plugin dependencies: $DEPENDENCIES"
+            dump_debug_state
+            exit 1
+          fi
         fi;
-        
+
         echo "::endgroup::"
 
-        wp-env run cli wp plugin activate $PLUGIN_SLUG
-        
+        if ! wp-env run cli wp plugin activate $PLUGIN_SLUG; then
+          echo "::error::Failed to activate $PLUGIN_SLUG"
+          dump_debug_state
+          exit 1
+        fi
+
         echo "::group::Run Plugin Check"
 
         # Run Plugin Check
