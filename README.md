@@ -217,6 +217,25 @@ steps:
       build-dir: './tmp-build/my-awesome-plugin'
 ```
 
+### Customizing the environment
+
+The action runs Plugin Check in a [`wp-env`](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/)
+environment, which it configures by adding the settings it needs (a mapping for
+the plugin, plus ports) to a `.wp-env.json` in the workspace root. Any other
+settings in that file are left alone, so you can use it — or a
+`.wp-env.override.json`, which takes precedence — to adjust the environment.
+
+For example, to keep a dependency's PHP notices out of the output:
+
+```json
+{
+  "config": {
+    "WP_DEBUG_DISPLAY": false,
+    "WP_DEBUG_LOG": true
+  }
+}
+```
+
 ### Supported Checks
 
 At the time of writing, the following checks exist:

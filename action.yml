@@ -97,11 +97,19 @@ runs:
         PLUGIN_SLUG=$(basename $PLUGIN_DIR)
         echo "PLUGIN_SLUG=$PLUGIN_SLUG" >> "$GITHUB_ENV"
         
-        # Check if .wp-env.json exists in the plugin directory before we create one
-        if [ -f "$PLUGIN_DIR/.wp-env.json" ]; then
-          echo "WP_ENV_JSON_EXISTS=true" >> "$GITHUB_ENV"
+        # wp-env always reads its config from the working directory, which is
+        # only the same as the plugin directory when build-dir is './'.
+        WP_ENV_DIR=$(realpath .)
+        WP_ENV_JSON="$WP_ENV_DIR/.wp-env.json"
+        echo "WP_ENV_JSON=$WP_ENV_JSON" >> "$GITHUB_ENV"
+
+        # Plugin Check only ever sees the file if this action creates it inside
+        # the directory being scanned. A .wp-env.json that was already there is
+        # part of the plugin and should be checked like any other file.
+        if [ ! -f "$WP_ENV_JSON" ] && [ "$WP_ENV_DIR" = "$PLUGIN_DIR" ]; then
+          echo "WP_ENV_JSON_GENERATED=true" >> "$GITHUB_ENV"
         else
-          echo "WP_ENV_JSON_EXISTS=false" >> "$GITHUB_ENV"
+          echo "WP_ENV_JSON_GENERATED=false" >> "$GITHUB_ENV"
         fi
       shell: bash
       env:
@@ -109,9 +117,40 @@ runs:
 
     - name: Setup wp-env
       run: |
-        touch .wp-env.json
-        > .wp-env.json
-        echo "{ \"core\": $WP_VERSION, \"port\": 8880, \"testsPort\": 8881, \"mappings\": { \"wp-content/plugins/$PLUGIN_SLUG\": \"$PLUGIN_DIR\" } }" >> .wp-env.json
+        # Merge the settings this action needs into any config the plugin
+        # already has, instead of overwriting it. Everything it configured --
+        # most importantly `config`, which is how WP_DEBUG and friends are
+        # set -- is preserved.
+        node -e '
+          const fs = require( "fs" );
+
+          const file = process.env.WP_ENV_JSON;
+          const config = fs.existsSync( file )
+            ? JSON.parse( fs.readFileSync( file, "utf8" ) )
+            : {};
+
+          // Only pin core when a specific version was requested, so that a
+          // core set by the plugin survives the default of "latest".
+          const core = JSON.parse( process.env.WP_VERSION );
+          if ( core !== null ) {
+            config.core = core;
+          } else if ( ! ( "core" in config ) ) {
+            config.core = null;
+          }
+
+          config.port = config.port ?? 8880;
+          config.testsPort = config.testsPort ?? 8881;
+          config.mappings = {
+            ...config.mappings,
+            [ "wp-content/plugins/" + process.env.PLUGIN_SLUG ]: process.env.PLUGIN_DIR,
+          };
+
+          fs.writeFileSync( file, JSON.stringify( config, null, 2 ) + "\n" );
+        '
+
+        echo "::group::Effective .wp-env.json"
+        cat "$WP_ENV_JSON"
+        echo "::endgroup::"
 
         npm -g --no-fund i @wordpress/env
       shell: bash
@@ -137,8 +176,8 @@ runs:
         EXCLUDE_DIRS="${EXCLUDE_DIRS//$'\n'/,}"
         IGNORE_CODES="${IGNORE_CODES//$'\n'/,}"
         
-        # Only exclude .wp-env.json if it was created by this action (didn't exist before)
-        if [ "$WP_ENV_JSON_EXISTS" = "false" ]; then
+        # Only exclude .wp-env.json if this action created it inside the directory being checked.
+        if [ "$WP_ENV_JSON_GENERATED" = "true" ]; then
           if [ -n "$EXCLUDE_FILES" ]; then
             EXCLUDE_FILES="--exclude-files=${EXCLUDE_FILES#--exclude-files=},.wp-env.json"
           else
