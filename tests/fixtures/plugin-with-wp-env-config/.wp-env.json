@@ -1,0 +1,6 @@
+{
+  "config": {
+    "PLUGIN_CHECK_ACTION_TEST": "preserved",
+    "WP_DEBUG_DISPLAY": false
+  }
+}
