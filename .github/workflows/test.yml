@@ -120,3 +120,53 @@ jobs:
         with:
           build-dir: 'tests/fixtures/hello-dolly-copy'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Runs on its own because the config below applies to the whole workspace,
+  # and because wp-env keeps its state between steps of the same job.
+  wp-env-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # wp-env reads its config from the workspace root, which is where a
+      # plugin's own .wp-env.json ends up when build-dir points elsewhere.
+      - name: Use the config the test plugin ships
+        run: cp tests/fixtures/plugin-with-wp-env-config/.wp-env.json .wp-env.json
+
+      - name: Run plugin check (existing wp-env config)
+        uses: ./
+        continue-on-error: true # Since we expect it to always fail for the test plugin.
+        with:
+          build-dir: 'tests/fixtures/plugin-with-wp-env-config'
+
+      - name: Verify the config survived
+        run: |
+          echo "::group::Merged .wp-env.json"
+          cat .wp-env.json
+          echo "::endgroup::"
+
+          node -e '
+            const assert = require( "node:assert" );
+            const fs = require( "fs" );
+
+            const config = JSON.parse( fs.readFileSync( ".wp-env.json", "utf8" ) );
+
+            assert.deepStrictEqual( config.config, {
+              PLUGIN_CHECK_ACTION_TEST: "preserved",
+              WP_DEBUG_DISPLAY: false,
+            }, "the config the plugin provided was not kept" );
+
+            assert.ok(
+              config.mappings[ "wp-content/plugins/plugin-with-wp-env-config" ]
+                ?.endsWith( "/tests/fixtures/plugin-with-wp-env-config" ),
+              "the plugin was not mapped into the environment"
+            );
+
+            assert.strictEqual( config.port, 8880, "the default port was not filled in" );
+            assert.strictEqual( config.testsPort, 8881, "the default tests port was not filled in" );
+          '
+
+          # The constant only reaches WordPress if wp-env read the merged config.
+          wp-env run cli wp config get PLUGIN_CHECK_ACTION_TEST | grep -q preserved
+        shell: bash
