@@ -236,6 +236,14 @@ For example, to keep a dependency's PHP notices out of the output:
 }
 ```
 
+### Plugin Check version
+
+This action pins the WordPress Plugin Check version it installs, so a new Plugin
+Check release never changes your CI results without warning. The pinned version is
+updated over time as part of this action's releases, so it's recommended to set up
+automatic dependency updates (e.g. [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot))
+to pick up new versions as they're released.
+
 ### Supported Checks
 
 At the time of writing, the following checks exist:

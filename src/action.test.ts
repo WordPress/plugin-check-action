@@ -48,7 +48,9 @@ const TRUNK = '"WordPress/WordPress#master"';
 describe('action.yml', () => {
 	it('does not preload plugin-check from a download URL', () => {
 		expect(actionYml).not.toContain('plugin-check.zip');
-		expect(actionYml).toContain('wp plugin install plugin-check --activate');
+		expect(actionYml).toContain(
+			'wp plugin install plugin-check --version="$PLUGIN_CHECK_VERSION" --activate',
+		);
 	});
 
 	it('verifies wp-env after starting it', () => {
