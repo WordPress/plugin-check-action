@@ -192,7 +192,7 @@ runs:
         if wp-env run cli wp plugin is-installed plugin-check; then
           wp-env run cli wp plugin activate plugin-check
         else
-          wp-env run cli wp plugin install plugin-check --activate
+          wp-env run cli wp plugin install plugin-check --version="$PLUGIN_CHECK_VERSION" --activate
         fi
 
         echo "::endgroup::"
@@ -233,6 +233,8 @@ runs:
 
       shell: bash
       env:
+        # Managed by .github/workflows/update-plugin-check.yml — do not edit by hand.
+        PLUGIN_CHECK_VERSION: '2.1.0'
         CHECKS: ${{ inputs.checks && format('--checks={0}', inputs.checks) || '' }}
         EXCLUDE_CHECKS: ${{ inputs.exclude-checks && format('--exclude-checks={0}', inputs.exclude-checks) || '' }}
         CATEGORIES: ${{ inputs.categories && format('--categories={0}', inputs.categories) || '' }}
