@@ -164,7 +164,7 @@ jobs:
             );
 
             assert.strictEqual( config.port, 8880, "the default port was not filled in" );
-            assert.strictEqual( config.testsPort, 8881, "the default tests port was not filled in" );
+            assert.strictEqual( config.testsEnvironment, false, "the tests environment was not turned off" );
           '
 
           # The constant only reaches WordPress if wp-env read the merged config.

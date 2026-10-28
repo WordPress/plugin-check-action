@@ -221,7 +221,9 @@ steps:
 
 The action runs Plugin Check in a [`wp-env`](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/)
 environment, which it configures by adding the settings it needs (a mapping for
-the plugin, plus ports) to a `.wp-env.json` in the workspace root. Any other
+the plugin, plus ports) to a `.wp-env.json` in the workspace root. The unused
+tests environment is disabled unless your configuration sets `env` or
+`testsEnvironment`. Any other
 settings in that file are left alone, so you can use it — or a
 `.wp-env.override.json`, which takes precedence — to adjust the environment.
 
