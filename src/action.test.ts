@@ -23,11 +23,17 @@ function wpEnvConfigScript(): string {
 function buildWpEnvConfig(
 	existing: Record<string, unknown> | null,
 	wpVersion = 'null',
+	override: Record<string, unknown> | null = null,
 ): Record<string, unknown> {
-	const file = join(mkdtempSync(join(tmpdir(), 'wp-env-')), '.wp-env.json');
+	const dir = mkdtempSync(join(tmpdir(), 'wp-env-'));
+	const file = join(dir, '.wp-env.json');
 
 	if (existing) {
 		writeFileSync(file, JSON.stringify(existing));
+	}
+
+	if (override) {
+		writeFileSync(join(dir, '.wp-env.override.json'), JSON.stringify(override));
 	}
 
 	execFileSync(process.execPath, ['-e', wpEnvConfigScript()], {
@@ -68,7 +74,7 @@ describe('.wp-env.json', () => {
 		expect(buildWpEnvConfig(null)).toEqual({
 			core: null,
 			port: 8880,
-			testsPort: 8881,
+			testsEnvironment: false,
 			mappings: {
 				'wp-content/plugins/my-plugin': '/work/build',
 			},
@@ -94,6 +100,18 @@ describe('.wp-env.json', () => {
 		});
 		expect(config.plugins).toEqual(['./vendor/some-plugin']);
 		expect(config.port).toBe(9999);
+	});
+
+	it('keeps the tests environment when the plugin configures env', () => {
+		const env = { development: { config: { WP_DEBUG: true } } };
+
+		for (const config of [
+			buildWpEnvConfig({ env }),
+			buildWpEnvConfig(null, 'null', { env }),
+		]) {
+			expect(config.testsEnvironment).toBeUndefined();
+			expect(config.testsPort).toBe(8881);
+		}
 	});
 
 	it('adds the plugin mapping without dropping existing ones', () => {

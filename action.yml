@@ -138,8 +138,23 @@ runs:
             config.core = null;
           }
 
+          // The action only uses the development environment, and wp-env
+          // warns that starting the tests environment by default is
+          // deprecated. Leave it on when the plugin configures `env` or
+          // `testsEnvironment` in either file, because wp-env ignores `env`
+          // once tests are disabled.
+          const overrideFile = file.replace( /\.wp-env\.json$/, ".wp-env.override.json" );
+          const override = fs.existsSync( overrideFile )
+            ? JSON.parse( fs.readFileSync( overrideFile, "utf8" ) )
+            : {};
+          const configures = ( key ) => key in config || key in override;
+          if ( ! configures( "testsEnvironment" ) && ! configures( "env" ) ) {
+            config.testsEnvironment = false;
+          } else {
+            config.testsPort = config.testsPort ?? 8881;
+          }
+
           config.port = config.port ?? 8880;
-          config.testsPort = config.testsPort ?? 8881;
           config.mappings = {
             ...config.mappings,
             [ "wp-content/plugins/" + process.env.PLUGIN_SLUG ]: process.env.PLUGIN_DIR,
