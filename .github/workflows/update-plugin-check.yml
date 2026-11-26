@@ -1,0 +1,64 @@
+name: Update Plugin Check version
+
+on:
+    schedule:
+        - cron: '0 6 * * 1'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    update:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Determine versions
+              id: versions
+              run: |
+                  latest="$(curl -sf 'https://api.wordpress.org/plugins/info/1.0/plugin-check.json' | jq -r '.version')"
+                  if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+                      echo "Could not determine the latest Plugin Check version." >&2
+                      exit 1
+                  fi
+                  current="$(grep -oP "^\s*PLUGIN_CHECK_VERSION:\s*'\K[^']+" action.yml)"
+                  if [ -z "$current" ]; then
+                      echo "Could not read the pinned Plugin Check version from action.yml." >&2
+                      exit 1
+                  fi
+                  echo "latest=$latest" >> "$GITHUB_OUTPUT"
+                  echo "current=$current" >> "$GITHUB_OUTPUT"
+                  echo "Pinned: $current, latest: $latest"
+
+            - name: Open update PR
+              if: ${{ steps.versions.outputs.latest != steps.versions.outputs.current }}
+              env:
+                  LATEST: ${{ steps.versions.outputs.latest }}
+                  CURRENT: ${{ steps.versions.outputs.current }}
+                  GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+              run: |
+                  branch="update-plugin-check-$LATEST"
+
+                  if gh pr list --state open --head "$branch" --json number --jq 'length' | grep -qv '^0$'; then
+                      echo "A PR for $LATEST already exists; nothing to do."
+                      exit 0
+                  fi
+
+                  git config user.name 'github-actions[bot]'
+                  git config user.email 'github-actions[bot]@users.noreply.github.com'
+                  git checkout -b "$branch"
+
+                  sed -i -E "s/^(\s*PLUGIN_CHECK_VERSION:\s*')[^']+(')/\1$LATEST\2/" action.yml
+
+                  git add action.yml
+                  git commit -m "Update Plugin Check to $LATEST"
+                  git push --force-with-lease origin "$branch"
+
+                  body="$(printf 'Bumps the pinned WordPress Plugin Check version from `%s` to `%s`.\n\nThis PR was opened automatically because a newer Plugin Check version was published on wordpress.org. Merge it when you are ready to adopt the new version — until then, CI keeps running against `%s`.' "$CURRENT" "$LATEST" "$CURRENT")"
+
+                  gh pr create \
+                      --head "$branch" \
+                      --title "Update Plugin Check to $LATEST" \
+                      --body "$body"
